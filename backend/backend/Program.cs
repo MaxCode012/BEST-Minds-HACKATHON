@@ -17,7 +17,8 @@ class Program
         // 1. Secrets & Connection Configuration
         string apiKey = builder.Configuration["OpenRouterApiKey"]
             ?? Environment.GetEnvironmentVariable("OPENROUTER_API_KEY")
-            ?? throw new InvalidOperationException("API key not found.");
+            ?? throw new InvalidOperationException("Set OpenRouterApiKey or OPENROUTER_API_KEY before running.");
+        string modelName = "inclusionai/ling-3.1-flash"; // Or "google/gemini-flash-1.5"
 
         string dbConnectionString = builder.Configuration.GetConnectionString("PostgreSQL")
             ?? "Host=localhost;Port=5432;Database=Hackaton;Username=postgres;Password=12345%$#@!";

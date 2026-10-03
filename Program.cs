@@ -9,7 +9,7 @@ public class OpenRouterSdkService
 {
     private readonly ChatClient _chatClient;
 
-    public OpenRouterSdkService(string apiKey, string modelName = "meta-llama/llama-3.3-70b-instruct:free")
+    public OpenRouterSdkService(string apiKey, string modelName = "meta-llama/llama-3.3-70b-instruct")
     {
         OpenAIClientOptions options = new OpenAIClientOptions
         {
@@ -37,8 +37,9 @@ public class SdkProgram
 {
     public static async Task Main()
     {
-        string apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY") ?? "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";
-        OpenRouterSdkService sdkService = new OpenRouterSdkService(apiKey, "meta-llama/llama-3.3-70b-instruct:free");
+        string apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY")
+            ?? throw new InvalidOperationException("Set the OPENROUTER_API_KEY environment variable.");
+        OpenRouterSdkService sdkService = new OpenRouterSdkService(apiKey, "meta-llama/llama-3.3-70b-instruct");
 
         string responseText = await sdkService.SendPromptAsync("Give me 3 quick dinner ideas under 15 minutes.");
 
