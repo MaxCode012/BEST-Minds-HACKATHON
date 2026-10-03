@@ -88,3 +88,20 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: #141010;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #78350f;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d97706;
+}
