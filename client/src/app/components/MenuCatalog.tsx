@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { MOCK_MENU, MOCK_USER, MenuItem } from '../data/mockData';
+import React, { useState, useEffect } from 'react';
+import { MOCK_USER, MenuItem, fetchMenuFromBackend } from '../data/mockData';
 import { 
   AlertTriangle, 
   Plus, 
@@ -8,7 +8,8 @@ import {
   Users, 
   User, 
   Search,
-  UtensilsCrossed
+  UtensilsCrossed,
+  Loader2
 } from 'lucide-react';
 
 interface Props {
@@ -21,11 +22,27 @@ interface Props {
 }
 
 export const MenuCatalog: React.FC<Props> = ({ onAddToCart }) => {
+  // Stare pentru stocarea preparatelor din baza de date și pentru indicatorul de încărcare
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [chefNote, setChefNote] = useState('');
   const [orderType, setOrderType] = useState<'individual' | 'group'>('individual');
   const [personName, setPersonName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Încărcare meniu din C# API / PostgreSQL
+  useEffect(() => {
+    const loadMenu = async () => {
+      setLoading(true);
+      const data = await fetchMenuFromBackend();
+      setMenuItems(data);
+      setLoading(false);
+    };
+
+    loadMenu();
+  }, []);
 
   const handleConfirmAdd = () => {
     if (selectedItem) {
@@ -37,7 +54,7 @@ export const MenuCatalog: React.FC<Props> = ({ onAddToCart }) => {
     }
   };
 
-  const filteredMenu = MOCK_MENU.filter((item) =>
+  const filteredMenu = menuItems.filter((item) =>
     item.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -77,13 +94,19 @@ export const MenuCatalog: React.FC<Props> = ({ onAddToCart }) => {
         />
       </div>
 
-      {/* Grilă Carduri Preparate */}
-      {filteredMenu.length === 0 ? (
+      {/* Stare de încărcare sau afișarea meniului */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 text-amber-400 gap-3 font-sans">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <p className="text-sm text-stone-400">Se încarcă meniul din baza de date...</p>
+        </div>
+      ) : filteredMenu.length === 0 ? (
         <p className="text-stone-500 text-center py-12 font-sans">Nu s-a găsit niciun preparat în meniu.</p>
       ) : (
+        /* Grilă Carduri Preparate */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredMenu.map((item) => {
-            const hasAllergen = item.allergens.some((a) => MOCK_USER.allergies.includes(a));
+            const hasAllergen = item.allergens?.some((a) => MOCK_USER.allergies.includes(a));
 
             return (
               <div
@@ -112,7 +135,7 @@ export const MenuCatalog: React.FC<Props> = ({ onAddToCart }) => {
 
                     {/* Alergeni */}
                     <div className="flex flex-wrap gap-2 mb-2 font-sans">
-                      {item.allergens.map((alg) => {
+                      {item.allergens?.map((alg) => {
                         const isUserAllergic = MOCK_USER.allergies.includes(alg);
                         return (
                           <span

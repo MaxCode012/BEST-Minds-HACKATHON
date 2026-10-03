@@ -98,36 +98,43 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
   console.log('Trimitem payload către C#:', payload);
 
   try {
-    const response = await fetch('http://172.30.69.205:5000/api/recommendations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+  const response = await fetch('http://172.30.69.205:5000/api/recommendations', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Meniu primit de la C#:', data);
+  if (response.ok) {
+    const data = await response.json();
+    console.log('Meniu primit de la C#:', data);
 
-      if (Array.isArray(data)) {
-        setRecommendations(data);
-      } else if (data.items && Array.isArray(data.items)) {
-        setRecommendations(data.items);
-      } else {
-        setRecommendations([]);
-      }
-    } else {
-      console.error('Eroare la răspunsul HTTP din C#:', response.status);
-      setRecommendations([]);
-    }
-  } catch (error) {
-    console.error('Eroare la conexiunea cu http://localhost:5277/api/Recommendations:', error);
+    // Extragerea listei brute din răspuns
+    const rawItems = Array.isArray(data) ? data : (data.items || []);
+
+    // Normalizarea proprietăților pentru a fi siguri că se afișează corect în UI
+    const normalizedItems = rawItems.map((item: any, index: number) => ({
+      id: item.id || item.Id || index + 1,
+      title: item.title || item.Title || 'Preparat fără nume',
+      description: item.description || item.Description || '',
+      price: item.price || item.Price || 0,
+      image: item.image || item.imageUrl || item.image_url || item.Image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+      allergens: item.allergens || item.Allergens || [],
+    }));
+
+    setRecommendations(normalizedItems);
+  } else {
+    console.error('Eroare la răspunsul HTTP din C#:', response.status);
     setRecommendations([]);
-  } finally {
-    setLoading(false);
-    setStep(5);
   }
+} catch (error) {
+  console.error('Eroare la conexiunea cu http://172.30.69.205:5000/api/recommendations:', error);
+  setRecommendations([]);
+} finally {
+  setLoading(false);
+  setStep(5);
+}
 };
 
   const handleAddDirectly = (item: MenuItem) => {
@@ -443,60 +450,70 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
             )}
 
             {/* PASUL 5: AFISARE RĂSPUNS BACKEND */}
-            {step === 5 && (
-              <div className="space-y-3 text-left">
-                <div className="flex justify-between items-center mb-1">
-                  <h4 className="text-amber-100 font-bold text-xs font-serif">Rezultate primite de la C# Controller:</h4>
-                  <button
-                    onClick={handleReset}
-                    className="text-[11px] text-stone-400 hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer"
-                  >
-                    <RefreshCw className="w-3 h-3" /> Resetează
-                  </button>
-                </div>
+            {/* PASUL 5: AFISARE RĂSPUNS BACKEND */}
+{step === 5 && (
+  <div className="space-y-3 text-left">
+    <div className="flex justify-between items-center mb-1">
+      <h4 className="text-amber-100 font-bold text-xs font-serif">Meniu Recomandat:</h4>
+      <button
+        onClick={handleReset}
+        className="text-[11px] text-stone-400 hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer"
+      >
+        <RefreshCw className="w-3 h-3" /> Resetează
+      </button>
+    </div>
 
-                {recommendations.length === 0 ? (
-                  <p className="text-stone-400 text-xs text-center py-6 font-sans">
-                    Nu s-au găsit preparate conform răspunsului primit de la server.
-                  </p>
-                ) : (
-                  <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-                    {recommendations.map((item) => {
-                      const isAdded = addedItemIds.includes(item.id);
-                      return (
-                        <div
-                          key={item.id}
-                          className="bg-stone-900 border border-amber-900/30 p-3 rounded-xl flex items-center justify-between"
-                        >
-                          <div>
-                            <h5 className="font-semibold text-amber-100 text-xs font-serif">{item.title}</h5>
-                            <span className="text-amber-400 font-bold text-xs">{item.price} MDL</span>
-                          </div>
-
-                          <button
-                            onClick={() => handleAddDirectly(item)}
-                            disabled={isAdded}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
-                              isAdded
-                                ? 'bg-stone-800 text-stone-500'
-                                : 'bg-amber-600 hover:bg-amber-500 text-stone-950'
-                            }`}
-                          >
-                            {isAdded ? (
-                              'Adăugat'
-                            ) : (
-                              <>
-                                <Plus className="w-3.5 h-3.5" /> Adaugă
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
+    {recommendations.length === 0 ? (
+      <p className="text-stone-400 text-xs text-center py-6 font-sans">
+        Nu s-au găsit preparate conform răspunsului primit de la server.
+      </p>
+    ) : (
+      <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+        {recommendations.map((item) => {
+          const isAdded = addedItemIds.includes(item.id);
+          return (
+            <div
+              key={item.id}
+              className="bg-stone-900 border border-amber-900/30 p-3 rounded-xl flex items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3">
+                {item.image && (
+                  <img 
+                    src={item.image} 
+                    alt={item.title} 
+                    className="w-12 h-12 object-cover rounded-lg border border-amber-900/20 shrink-0"
+                  />
                 )}
+                <div>
+                  <h5 className="font-semibold text-amber-100 text-xs font-serif">{item.title}</h5>
+                  <span className="text-amber-400 font-bold text-xs">{item.price} MDL</span>
+                </div>
               </div>
-            )}
+
+              <button
+                onClick={() => handleAddDirectly(item)}
+                disabled={isAdded}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
+                  isAdded
+                    ? 'bg-stone-800 text-stone-500'
+                    : 'bg-amber-600 hover:bg-amber-500 text-stone-950'
+                }`}
+              >
+                {isAdded ? (
+                  'Adăugat'
+                ) : (
+                  <>
+                    <Plus className="w-3.5 h-3.5" /> Adaugă
+                  </>
+                )}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+)}
           </div>
         </div>
       )}
