@@ -2,11 +2,8 @@
   "ExpandedNodes": [
     "",
     "\\backend",
-    "\\backend\\ManagementRest.Api",
-    "\\backend\\ManagementRest.Api\\Controllers",
-    "\\client",
-    "\\client\\public",
-    "\\client\\src"
+    "\\backend\\AI_assistant"
   ],
+  "SelectedNode": "\\Program.cs",
   "PreviewInSolutionExplorer": false
 }
