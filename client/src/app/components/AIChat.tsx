@@ -39,6 +39,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
   });
 
   const [recommendations, setRecommendations] = useState<MenuItem[]>([]);
+  const [aiReasoning, setAiReasoning] = useState<string>('');
+  const [totalCost, setTotalCost] = useState<number | null>(null);
 
   const handleReset = () => {
     setStep(1);
@@ -52,6 +54,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
       allergies: [...MOCK_USER.allergies],
     });
     setRecommendations([]);
+    setAiReasoning('');
+    setTotalCost(null);
     setAddedItemIds([]);
     setCustomAllergyInput('');
   };
@@ -79,63 +83,83 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
     }
   };
 
-  // Trimiterea pachetului de date către C# Backend Controller (api/Recommendations)
+  // Trimiterea pachetului de date către C# Backend Controller
   const submitPreferencesToBackend = async () => {
-  setLoading(true);
+    setLoading(true);
 
-  // Construim exact structura cerută de record-ul C# UserRecommendationRequest
-  const payload = {
-    budget: typeof prefs.budget === 'number' ? prefs.budget : null,
-    allergies: prefs.allergies && prefs.allergies.length > 0 ? prefs.allergies : [],
-    wants_drink: Boolean(prefs.drinks),
-    wants_dessert: Boolean(prefs.dessert),
-    preferences: [
-      prefs.hungerLevel === 'hearty' ? 'masă copioasă' : 'gustare ușoară',
-      prefs.dietType !== 'all' ? prefs.dietType : null,
-    ].filter(Boolean) as string[],
+    const payload = {
+      budget: typeof prefs.budget === 'number' ? prefs.budget : null,
+      allergies: prefs.allergies && prefs.allergies.length > 0 ? prefs.allergies : [],
+      wants_drink: Boolean(prefs.drinks),
+      wants_dessert: Boolean(prefs.dessert),
+      preferences: [
+        prefs.hungerLevel === 'hearty' ? 'masă copioasă' : 'gustare ușoară',
+        prefs.dietType !== 'all' ? prefs.dietType : null,
+      ].filter(Boolean) as string[],
+    };
+
+    console.log('Trimitem payload către C#:', payload);
+
+    try {
+      const response = await fetch('http://172.30.69.205:5000/api/recommendations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Meniu primit de la C#:', data);
+
+        // Salvează explicația generală și costul total
+        setAiReasoning(data.reasoning ?? data.Reasoning ?? '');
+        setTotalCost(data.total_cost ?? data.TotalCost ?? null);
+
+        // FIX: C# returnează lista în data.selected_items
+        const rawItems = data.selected_items ?? data.SelectedItems ?? data.items ?? (Array.isArray(data) ? data : []);
+
+        const normalizedItems: MenuItem[] = rawItems.map((item: any, index: number) => {
+          let parsedAllergens: string[] = [];
+          const rawAllergens = item.allergens ?? item.Allergens;
+
+          if (Array.isArray(rawAllergens)) {
+            parsedAllergens = rawAllergens;
+          } else if (typeof rawAllergens === 'string' && rawAllergens.trim().length > 0) {
+            parsedAllergens = rawAllergens.split(',').map((a: string) => a.trim());
+          }
+
+          return {
+            id: Number(item.id ?? item.Id ?? index + 1),
+            title: item.name ?? item.Name ?? item.title ?? item.Title ?? 'Preparat Recomandat',
+            description: item.reason ?? item.Reason ?? item.description ?? item.Description ?? '',
+            price: Number(item.price ?? item.Price ?? 0),
+            category: item.category ?? item.Category ?? 'General',
+            image:
+              item.image ??
+              item.Image ??
+              item.image_url ??
+              item.imageUrl ??
+              'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+            allergens: parsedAllergens,
+          };
+        });
+
+        console.log('Recomandări procesate cu succes:', normalizedItems);
+        setRecommendations(normalizedItems);
+      } else {
+        console.error('Eroare la răspunsul HTTP din C#:', response.status);
+        setRecommendations([]);
+      }
+    } catch (error) {
+      console.error('Eroare la conexiunea cu http://172.30.69.205:5000/api/recommendations:', error);
+      setRecommendations([]);
+    } finally {
+      setLoading(false);
+      setStep(5);
+    }
   };
-
-  console.log('Trimitem payload către C#:', payload);
-
-  try {
-  const response = await fetch('http://172.30.69.205:5000/api/recommendations', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (response.ok) {
-    const data = await response.json();
-    console.log('Meniu primit de la C#:', data);
-
-    // Extragerea listei brute din răspuns
-    const rawItems = Array.isArray(data) ? data : (data.items || []);
-
-    // Normalizarea proprietăților pentru a fi siguri că se afișează corect în UI
-    const normalizedItems = rawItems.map((item: any, index: number) => ({
-      id: item.id || item.Id || index + 1,
-      title: item.title || item.Title || 'Preparat fără nume',
-      description: item.description || item.Description || '',
-      price: item.price || item.Price || 0,
-      image: item.image || item.imageUrl || item.image_url || item.Image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
-      allergens: item.allergens || item.Allergens || [],
-    }));
-
-    setRecommendations(normalizedItems);
-  } else {
-    console.error('Eroare la răspunsul HTTP din C#:', response.status);
-    setRecommendations([]);
-  }
-} catch (error) {
-  console.error('Eroare la conexiunea cu http://172.30.69.205:5000/api/recommendations:', error);
-  setRecommendations([]);
-} finally {
-  setLoading(false);
-  setStep(5);
-}
-};
 
   const handleAddDirectly = (item: MenuItem) => {
     if (onAddToCart) {
@@ -182,10 +206,10 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
           </div>
 
           {/* Corp Quiz */}
-          <div className="flex-1 p-5 overflow-y-auto bg-[#181413] flex flex-col justify-center">
+          <div className="flex-1 p-5 overflow-y-auto bg-[#181413] flex flex-col justify-start">
             {/* PASUL 1: FOAME & DIETĂ */}
             {step === 1 && (
-              <div className="space-y-4">
+              <div className="space-y-4 my-auto">
                 <h3 className="text-amber-100 font-semibold text-sm text-center font-serif">
                   Cât de foame vă este și ce preferințe aveți? 🍽️
                 </h3>
@@ -249,7 +273,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
             {/* PASUL 2: BĂUTURI & DESERT */}
             {step === 2 && (
-              <div className="space-y-4 text-center">
+              <div className="space-y-4 text-center my-auto">
                 <h3 className="text-amber-100 font-semibold text-sm font-serif">
                   Doriți o băutură sau un desert? 🍷🍰
                 </h3>
@@ -303,8 +327,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
             {/* PASUL 3: BUGET */}
             {step === 3 && (
-              <div className="space-y-4 text-center">
-                <h3 className="text-amber-100 font-semibold text-sm font-serif">Care este bugetul maxim per preparat? 💵</h3>
+              <div className="space-y-4 text-center my-auto">
+                <h3 className="text-amber-100 font-semibold text-sm font-serif">Care este bugetul maxim? 💵</h3>
 
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -312,7 +336,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                   </div>
                   <input
                     type="number"
-                    placeholder="Ex: 120"
+                    placeholder="Ex: 300"
                     value={prefs.budget}
                     onChange={(e) =>
                       setPrefs({
@@ -328,7 +352,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                 </div>
 
                 <div className="flex gap-2 justify-center">
-                  {[80, 120, 150].map((amount) => (
+                  {[150, 300, 500].map((amount) => (
                     <button
                       key={amount}
                       onClick={() => setPrefs({ ...prefs, budget: amount })}
@@ -358,13 +382,13 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
             {/* PASUL 4: ALERGII & TRIMITERE LA API C# */}
             {step === 4 && (
-              <div className="space-y-4">
+              <div className="space-y-4 my-auto">
                 <div className="text-center">
                   <h3 className="text-amber-100 font-semibold text-sm font-serif flex items-center justify-center gap-1.5">
                     <AlertTriangle className="w-4 h-4 text-amber-500" /> Selectează Alergiile Tale
                   </h3>
                   <p className="text-[11px] text-stone-400 mt-1">
-                    Selectează alergeni de transmis către API-ul C#:
+                    Selectează alergenii de transmis către API:
                   </p>
                 </div>
 
@@ -450,70 +474,87 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
             )}
 
             {/* PASUL 5: AFISARE RĂSPUNS BACKEND */}
-            {/* PASUL 5: AFISARE RĂSPUNS BACKEND */}
-{step === 5 && (
-  <div className="space-y-3 text-left">
-    <div className="flex justify-between items-center mb-1">
-      <h4 className="text-amber-100 font-bold text-xs font-serif">Meniu Recomandat:</h4>
-      <button
-        onClick={handleReset}
-        className="text-[11px] text-stone-400 hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer"
-      >
-        <RefreshCw className="w-3 h-3" /> Resetează
-      </button>
-    </div>
-
-    {recommendations.length === 0 ? (
-      <p className="text-stone-400 text-xs text-center py-6 font-sans">
-        Nu s-au găsit preparate conform răspunsului primit de la server.
-      </p>
-    ) : (
-      <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
-        {recommendations.map((item) => {
-          const isAdded = addedItemIds.includes(item.id);
-          return (
-            <div
-              key={item.id}
-              className="bg-stone-900 border border-amber-900/30 p-3 rounded-xl flex items-center justify-between gap-3"
-            >
-              <div className="flex items-center gap-3">
-                {item.image && (
-                  <img 
-                    src={item.image} 
-                    alt={item.title} 
-                    className="w-12 h-12 object-cover rounded-lg border border-amber-900/20 shrink-0"
-                  />
-                )}
-                <div>
-                  <h5 className="font-semibold text-amber-100 text-xs font-serif">{item.title}</h5>
-                  <span className="text-amber-400 font-bold text-xs">{item.price} MDL</span>
+            {step === 5 && (
+              <div className="space-y-3 text-left">
+                <div className="flex justify-between items-center mb-1">
+                  <h4 className="text-amber-100 font-bold text-xs font-serif">
+                    Meniu Recomandat {totalCost !== null && `(${totalCost.toFixed(2)} MDL)`}:
+                  </h4>
+                  <button
+                    onClick={handleReset}
+                    className="text-[11px] text-stone-400 hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <RefreshCw className="w-3 h-3" /> Resetează
+                  </button>
                 </div>
-              </div>
 
-              <button
-                onClick={() => handleAddDirectly(item)}
-                disabled={isAdded}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
-                  isAdded
-                    ? 'bg-stone-800 text-stone-500'
-                    : 'bg-amber-600 hover:bg-amber-500 text-stone-950'
-                }`}
-              >
-                {isAdded ? (
-                  'Adăugat'
-                ) : (
-                  <>
-                    <Plus className="w-3.5 h-3.5" /> Adaugă
-                  </>
+                {/* Explicația generală generată de AI */}
+                {aiReasoning && (
+                  <div className="bg-amber-950/30 border border-amber-800/40 p-2.5 rounded-xl text-stone-300 text-[11px] leading-relaxed font-sans">
+                    💡 <span className="italic">{aiReasoning}</span>
+                  </div>
                 )}
-              </button>
-            </div>
-          );
-        })}
-      </div>
-    )}
-  </div>
-)}
+
+                {recommendations.length === 0 ? (
+                  <p className="text-stone-400 text-xs text-center py-6 font-sans">
+                    Nu s-au găsit preparate conform răspunsului primit de la server.
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                    {recommendations.map((item) => {
+                      const isAdded = addedItemIds.includes(item.id);
+                      return (
+                        <div
+                          key={item.id}
+                          className="bg-stone-900 border border-amber-900/30 p-3 rounded-xl flex flex-col gap-2"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              {item.image && (
+                                <img 
+                                  src={item.image} 
+                                  alt={item.title} 
+                                  className="w-12 h-12 object-cover rounded-lg border border-amber-900/20 shrink-0"
+                                />
+                              )}
+                              <div>
+                                <h5 className="font-semibold text-amber-100 text-xs font-serif">{item.title}</h5>
+                                <span className="text-amber-400 font-bold text-xs">{item.price} MDL</span>
+                              </div>
+                            </div>
+
+                            <button
+                              onClick={() => handleAddDirectly(item)}
+                              disabled={isAdded}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
+                                isAdded
+                                  ? 'bg-stone-800 text-stone-500'
+                                  : 'bg-amber-600 hover:bg-amber-500 text-stone-950'
+                              }`}
+                            >
+                              {isAdded ? (
+                                'Adăugat'
+                              ) : (
+                                <>
+                                  <Plus className="w-3.5 h-3.5" /> Adaugă
+                                </>
+                              )}
+                            </button>
+                          </div>
+
+                          {/* Afișează motivul individual pentru fiecare fel de mâncare */}
+                          {item.description && (
+                            <p className="text-[11px] text-stone-400 italic border-t border-stone-800/60 pt-1.5 mt-0.5">
+                              {item.description}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
