@@ -1,122 +1,59 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import { MenuCatalog } from './app/components/MenuCatalog';
+import { MenuItem } from './app/data/mockData';
+import { ShoppingBag, Utensils } from 'lucide-react';
 
-function App() {
-  const [count, setCount] = useState<number>(0)
+export default function App() {
+  const [cart, setCart] = useState<MenuItem[]>([]);
+  const [view, setView] = useState<'table' | 'kitchen'>('table');
+
+  const handleAddToCart = (item: MenuItem) => {
+    setCart((prev) => [...prev, item]);
+  };
+
+  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>BEST Minds Hackathon Demo</h1>
-          <p>
-            Aplicația React este pregătită și funcționează perfect!
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Număr click-uri: {count}
-        </button>
-      </section>
+    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">
+      {/* Header Bar */}
+      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2 font-bold text-xl text-white">
+            <Utensils className="text-emerald-400" />
+            <span>SmartResto <span className="text-xs font-normal text-slate-400">| Masa #4</span></span>
+          </div>
 
-      <div className="ticks"></div>
+          <div className="flex items-center gap-4">
+            {/* Comutator rapid Client / Bucătărie */}
+            <button
+              onClick={() => setView(view === 'table' ? 'kitchen' : 'table')}
+              className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg text-slate-300"
+            >
+              Schimbă în: {view === 'table' ? 'Ecran Bucătărie' : 'Ecran Client'}
+            </button>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank" rel="noreferrer">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank" rel="noreferrer">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+            {/* Indicator Coș */}
+            <div className="flex items-center gap-2 bg-slate-800 border border-slate-700 px-3.5 py-1.5 rounded-xl">
+              <ShoppingBag className="w-4 h-4 text-emerald-400" />
+              <span className="font-semibold text-sm">{cart.length} produse</span>
+              <span className="text-slate-500">|</span>
+              <span className="font-bold text-sm text-emerald-400">{totalPrice} MDL</span>
+            </div>
+          </div>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      </header>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {/* Corpul Paginii */}
+      <main>
+        {view === 'table' ? (
+          <MenuCatalog onAddToCart={handleAddToCart} />
+        ) : (
+          <div className="max-w-6xl mx-auto p-6 text-center py-20 text-slate-400">
+            <h2 className="text-2xl font-bold text-white mb-2">Ecran Bucătărie (KDS)</h2>
+            <p>Comenzile primite în timp real prin SignalR vor fi afișate aici.</p>
+          </div>
+        )}
+      </main>
+    </div>
+  );
 }
-
-export default App
