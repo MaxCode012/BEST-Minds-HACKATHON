@@ -1,6 +1,12 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\backend",
+    "\\backend\\ManagementRest.Api",
+    "\\backend\\ManagementRest.Api\\Controllers",
+    "\\client",
+    "\\client\\public",
+    "\\client\\src"
   ],
   "PreviewInSolutionExplorer": false
 }

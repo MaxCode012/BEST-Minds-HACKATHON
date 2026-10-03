@@ -1,0 +1,7 @@
+-Aplicatie web simulare tablete restaurante
+-Comandarea mancarii
+-Baze de date cu preferintele utilizatorului
+-Progress Bar
+-Notificari cu etapa pregatirii
+-Notite pentru bucatar
+-Utilizarea NFC pentru scanarea cardului personal
