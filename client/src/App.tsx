@@ -1,121 +1,84 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useState, type FormEvent } from 'react'
 import './App.css'
 
+type Recommendation = {
+  orderId: number
+  requestedAt: string
+  selectedItems: { id: number; name: string; price: number; category: string; reason: string }[]
+  totalCost: number
+  remainingBudget: number
+  reasoning: string
+}
+
 function App() {
-  const [count, setCount] = useState<number>(0)
+  const [orderId, setOrderId] = useState('123')
+  const [preferences, setPreferences] = useState('spicy')
+  const [budget, setBudget] = useState('250')
+  const [includeDrink, setIncludeDrink] = useState(true)
+  const [requestedAt, setRequestedAt] = useState('')
+  const [recommendation, setRecommendation] = useState<Recommendation | null>(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setLoading(true)
+    setError('')
+    setRecommendation(null)
+
+    try {
+      const response = await fetch('/api/recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: Number(orderId),
+          preferences: preferences.split(',').map((value) => value.trim()).filter(Boolean),
+          budget: Number(budget),
+          includeDrink,
+          requestedAt: requestedAt ? new Date(requestedAt).toISOString() : null,
+        }),
+      })
+
+      const body = await response.json()
+      if (!response.ok) {
+        throw new Error(body.detail ?? body.title ?? 'Could not get recommendations.')
+      }
+      setRecommendation(body as Recommendation)
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : 'Could not reach the backend.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>BEST Minds Hackathon Demo</h1>
-          <p>
-            Aplicația React este pregătită și funcționează perfect!
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Număr click-uri: {count}
-        </button>
-      </section>
+    <main className="recommendation-app">
+      <h1>Food recommendations</h1>
+      <p>Tell us about the order and get meal suggestions from the AI assistant.</p>
+      <form className="recommendation-form" onSubmit={handleSubmit}>
+        <label>Order ID<input type="number" min="1" required value={orderId} onChange={(event) => setOrderId(event.target.value)} /></label>
+        <label>Preferences <span>(comma separated)</span><input value={preferences} onChange={(event) => setPreferences(event.target.value)} placeholder="spicy, vegetarian" /></label>
+        <label>Budget (MDL)<input type="number" min="0.01" step="0.01" required value={budget} onChange={(event) => setBudget(event.target.value)} /></label>
+        <label>Requested time (optional)<input type="datetime-local" value={requestedAt} onChange={(event) => setRequestedAt(event.target.value)} /></label>
+        <label className="drink-option"><input type="checkbox" checked={includeDrink} onChange={(event) => setIncludeDrink(event.target.checked)} /> Include a drink</label>
+        <button type="submit" disabled={loading}>{loading ? 'Getting recommendations…' : 'Recommend a meal'}</button>
+      </form>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank" rel="noreferrer">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank" rel="noreferrer">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank" rel="noreferrer">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      {error && <p className="recommendation-error" role="alert">{error}</p>}
+      {recommendation && (
+        <section className="recommendation-result" aria-live="polite">
+          <h2>Recommendation for order #{recommendation.orderId}</h2>
+          <p>{recommendation.reasoning}</p>
+          {recommendation.selectedItems.length === 0 ? <p>No items fit this budget.</p> : (
+            <ul>{recommendation.selectedItems.map((item) => (
+              <li key={item.id}><strong>{item.name}</strong> — {item.price.toFixed(2)} MDL <span>({item.category})</span><p>{item.reason}</p></li>
+            ))}</ul>
+          )}
+          <p><strong>Total:</strong> {recommendation.totalCost.toFixed(2)} MDL · <strong>Remaining:</strong> {recommendation.remainingBudget.toFixed(2)} MDL</p>
+          <small>Requested at: {new Date(recommendation.requestedAt).toLocaleString()}</small>
+        </section>
+      )}
+    </main>
   )
 }
 
