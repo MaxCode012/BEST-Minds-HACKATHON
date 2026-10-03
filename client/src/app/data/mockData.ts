@@ -20,6 +20,12 @@ export const MOCK_USER: UserProfile = {
   preferences: ["fără picant", "vegetarian option"]
 };
 
+export interface CartItem extends MenuItem {
+  cartItemId: string; 
+  chefNote?: string;
+  orderType: 'individual' | 'group';
+}
+
 export const MOCK_MENU: MenuItem[] = [
   {
     id: 1,
