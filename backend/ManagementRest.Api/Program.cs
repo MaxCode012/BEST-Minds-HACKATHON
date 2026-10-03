@@ -14,6 +14,7 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
+builder.Services.AddSingleton<RecommendationResponseStore>();
 builder.Services.AddSingleton<RecommendationService>();
 
 var app = builder.Build();

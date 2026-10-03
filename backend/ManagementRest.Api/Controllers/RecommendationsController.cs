@@ -10,9 +10,17 @@ namespace ManagementRest.Api.Controllers;
 [Route("api/[controller]")]
 public class RecommendationsController(
     RecommendationService recommendationService,
+    RecommendationResponseStore responseStore,
     ILogger<RecommendationsController> logger,
     IWebHostEnvironment environment) : ControllerBase
 {
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<RecommendationResponse>>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<RecommendationResponse>>> GetAll(CancellationToken cancellationToken)
+    {
+        return Ok(await responseStore.GetAllAsync(cancellationToken));
+    }
+
     [HttpPost]
     [ProducesResponseType<RecommendationResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]

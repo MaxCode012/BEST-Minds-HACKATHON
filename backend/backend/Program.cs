@@ -17,7 +17,7 @@ class Program
         string apiKey = builder.Configuration["OpenRouterApiKey"]
             ?? Environment.GetEnvironmentVariable("OPENROUTER_API_KEY")
             ?? throw new InvalidOperationException("Set OpenRouterApiKey or OPENROUTER_API_KEY before running.");
-        string modelName = "meta-llama/llama-3.3-70b-instruct"; // Or "google/gemini-flash-1.5"
+        string modelName = "inclusionai/ling-3.1-flash"; // Or "google/gemini-flash-1.5"
 
         // 2. Full Menu with Romanian Items & Market Prices in MDL
         List<MenuItem> meniuComplet = new List<MenuItem>

@@ -11,6 +11,7 @@ namespace ManagementRest.Api.Services;
 public class RecommendationService
 {
     private readonly ChatClient _chatClient;
+    private readonly RecommendationResponseStore _responseStore;
     private readonly bool _apiKeyError;
     private readonly JsonSerializerOptions _jsonOptions = new() { PropertyNameCaseInsensitive = true };
     private readonly List<MenuItem> _menu =
@@ -31,8 +32,9 @@ public class RecommendationService
         new() { Id = 14, Name = "Mango sticky rice", Price = 90m, Category = "Dessert", Description = "Sweet coconut rice with fresh mango" }
     ];
 
-    public RecommendationService(IConfiguration configuration)
+    public RecommendationService(IConfiguration configuration, RecommendationResponseStore responseStore)
     {
+        _responseStore = responseStore;
         var apiKey = configuration["OpenRouter:ApiKey"]
             ?? configuration["OpenRouterApiKey"]
             ?? Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
@@ -62,13 +64,15 @@ public class RecommendationService
 
         if (availableMenu.Count == 0)
         {
-            return new RecommendationResponse
+            var emptyResponse = new RecommendationResponse
             {
                 OrderId = request.OrderId,
                 RequestedAt = requestedAt,
                 RemainingBudget = request.Budget,
                 Reasoning = "No menu items fit the supplied budget and drink preference."
             };
+            await _responseStore.AddAsync(emptyResponse, cancellationToken);
+            return emptyResponse;
         }
 
         var menuJson = JsonSerializer.Serialize(availableMenu);
@@ -123,7 +127,7 @@ public class RecommendationService
         }
 
         var total = selectedItems.Sum(item => item.Price);
-        return new RecommendationResponse
+        var response = new RecommendationResponse
         {
             OrderId = request.OrderId,
             RequestedAt = requestedAt,
@@ -132,6 +136,8 @@ public class RecommendationService
             RemainingBudget = request.Budget - total,
             Reasoning = aiResult.Reasoning ?? "Recommendations selected from the available menu."
         };
+        await _responseStore.AddAsync(response, cancellationToken);
+        return response;
     }
 
     private static string CleanJson(string text)
