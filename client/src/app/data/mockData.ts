@@ -9,12 +9,14 @@ export interface MenuItem {
 }
 
 export interface UserProfile {
+  id: string;
   name: string;
   allergies: string[];
   preferences: string[];
 }
 
 export const MOCK_USER: UserProfile = {
+  id: "user-1",
   name: "Alexandru",
   allergies: ["lactoză", "alune"],
   preferences: ["fără picant", "vegetarian option"]
