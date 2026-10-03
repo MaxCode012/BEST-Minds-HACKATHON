@@ -115,7 +115,7 @@ class Program
                 Console.WriteLine($"Buget Rămas: {(result.RemainingBudget.HasValue ? $"{result.RemainingBudget.Value:F2} MDL" : "N/A")}");
                 Console.WriteLine($"Motiv: {result.Reasoning}\n");
 
-                List<SavedRecommendation> savedDatabaseRecords = new List<SavedRecommendation>();
+                //List<SavedRecommendation> savedDatabaseRecords = new List<SavedRecommendation>();
 
                 foreach (RecommendedItem item in result.SelectedItems)
                 {
@@ -123,18 +123,18 @@ class Program
                     Console.WriteLine($"   Motiv: {item.Reason}");
 
                     // Create strongly-typed entity ready to be saved into SQLite / Database / Session
-                    SavedRecommendation recordToSave = new SavedRecommendation(
+                    /*SavedRecommendation recordToSave = new SavedRecommendation(
                         item.Id,
                         item.Name,
                         item.Price,
                         item.Reason,
                         DateTime.Now
-                    );
+                    );*/
 
-                    savedDatabaseRecords.Add(recordToSave);
+                    //savedDatabaseRecords.Add(recordToSave);
                 }
 
-                Console.WriteLine($"\nSucces! {savedDatabaseRecords.Count} recomandări au fost salvate în lista de obiecte C#.");
+                //Console.WriteLine($"\nSucces! {savedDatabaseRecords.Count} recomandări au fost salvate în lista de obiecte C#.");
             }
         }
         catch (ClientResultException ex) when (ex.Status == 429)
