@@ -24,6 +24,7 @@ export interface CartItem extends MenuItem {
   cartItemId: string; 
   chefNote?: string;
   orderType: 'individual' | 'group';
+  userName: string;
 }
 
 export const MOCK_MENU: MenuItem[] = [

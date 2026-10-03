@@ -1,123 +1,156 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { MenuCatalog } from './app/components/MenuCatalog';
-import { MenuItem, CartItem } from './app/data/mockData';
-import { ShoppingBag, Utensils, MessageSquare, Trash2 } from 'lucide-react';
 import { KDS } from './app/components/KDS';
+import { AIChat } from './app/components/AIChat';
+import { MenuItem, CartItem, MOCK_USER } from './app/data/mockData';
+import { UtensilsCrossed, ShoppingBag, ChefHat, X, Trash2 } from 'lucide-react';
 
 export default function App() {
+  const [view, setView] = useState<'table' | 'kds'>('table');
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [kitchenOrders, setKitchenOrders] = useState<CartItem[]>([]);
-  const [view, setView] = useState<'table' | 'kitchen'>('table');
-  
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [kitchenOrders, setKitchenOrders] = useState<CartItem[]>([]);
 
-  const handleAddToCart = (item: MenuItem, chefNote: string, orderType: 'individual' | 'group') => {
+  const handleAddToCart = (
+    item: MenuItem,
+    chefNote: string,
+    orderType: 'individual' | 'group',
+    userName: string
+  ) => {
     const newCartItem: CartItem = {
       ...item,
       cartItemId: Math.random().toString(36).substring(2, 9),
       chefNote,
       orderType,
+      userName: userName || MOCK_USER.name,
     };
     setCart((prev) => [...prev, newCartItem]);
   };
 
   const handleRemoveFromCart = (cartItemId: string) => {
-    setCart((prev) => prev.filter((item) => item.cartItemId !== cartItemId));
+    setCart((prev) => prev.filter((i) => i.cartItemId !== cartItemId));
   };
 
   const handleSendToKitchen = () => {
+    if (cart.length === 0) return;
     setKitchenOrders((prev) => [...prev, ...cart]);
     setCart([]);
     setIsCartOpen(false);
+    setView('kds');
   };
 
-  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
+  const cartTotal = cart.reduce((acc, item) => acc + item.price, 0);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans">
+    <div className="min-h-screen bg-[#0f0d0e] text-stone-100 font-sans selection:bg-amber-500 selection:text-stone-950">
       {/* Header Bar */}
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2 font-bold text-xl text-white">
-            <Utensils className="text-emerald-400" />
-            <span>SmartResto <span className="text-xs font-normal text-slate-400">| Masa #4</span></span>
+      <header className="bg-[#141010]/90 border-b border-amber-900/40 sticky top-0 z-40 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          {/* Logo & Branding */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+              <UtensilsCrossed className="w-5 h-5" />
+            </div>
+            <div>
+              <h1 className="font-serif text-xl font-bold text-amber-100 tracking-wide">
+                SmartResto
+              </h1>
+              <p className="text-[11px] text-stone-400 font-medium">Fine Dining Experience</p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Comutator rapid Client / Bucătărie */}
+          {/* Navigarea între Meniu și KDS */}
+          <div className="flex items-center gap-2 bg-[#1a1615] p-1.5 rounded-xl border border-amber-900/30">
             <button
-              onClick={() => setView(view === 'table' ? 'kitchen' : 'table')}
-              className="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg text-slate-300 transition-colors"
+              onClick={() => setView('table')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                view === 'table'
+                  ? 'bg-amber-600 text-stone-950 shadow-md'
+                  : 'text-stone-400 hover:text-stone-200'
+              }`}
             >
-              Schimbă în: {view === 'table' ? 'Ecran Bucătărie' : 'Ecran Client'}
+              Meniu Masă
             </button>
-
-            {/* Buton interactiv Coș */}
             <button
-              onClick={() => setIsCartOpen(!isCartOpen)}
-              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3.5 py-1.5 rounded-xl cursor-pointer transition-all"
+              onClick={() => setView('kds')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                view === 'kds'
+                  ? 'bg-amber-600 text-stone-950 shadow-md'
+                  : 'text-stone-400 hover:text-stone-200'
+              }`}
             >
-              <ShoppingBag className="w-4 h-4 text-emerald-400" />
-              <span className="font-semibold text-sm">{cart.length} produse</span>
-              <span className="text-slate-500">|</span>
-              <span className="font-bold text-sm text-emerald-400">{totalPrice} MDL</span>
+              <ChefHat className="w-4 h-4" /> Bucătărie (KDS)
+              {kitchenOrders.length > 0 && (
+                <span className="bg-rose-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-extrabold">
+                  {kitchenOrders.length}
+                </span>
+              )}
             </button>
           </div>
+
+          {/* Buton Coș */}
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            <span>Coș</span>
+            {cart.length > 0 && (
+              <span className="bg-amber-500 text-stone-950 text-xs px-2 py-0.5 rounded-full font-extrabold">
+                {cart.length}
+              </span>
+            )}
+          </button>
         </div>
       </header>
 
       {/* Sertar Coș (Drawer) */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-slate-800 border-l border-slate-700 h-full flex flex-col justify-between p-6 shadow-2xl animate-in slide-in-from-right duration-200">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-end">
+          <div className="bg-[#1c1817] border-l border-amber-900/40 w-full max-w-md h-full flex flex-col justify-between p-6 shadow-2xl animate-in slide-in-from-right duration-200">
             <div>
-              <div className="flex justify-between items-center mb-6 pb-4 border-b border-slate-700">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <ShoppingBag className="text-emerald-400" /> Coșul Tău
-                </h2>
+              <div className="flex justify-between items-center mb-6 pb-4 border-b border-amber-900/30">
+                <h3 className="text-xl font-bold font-serif text-amber-100 flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 text-amber-400" /> Comanda Ta
+                </h3>
                 <button
                   onClick={() => setIsCartOpen(false)}
-                  className="text-slate-400 hover:text-white text-sm font-semibold"
+                  className="text-stone-400 hover:text-amber-200 p-1"
                 >
-                  Închide ✕
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
               {cart.length === 0 ? (
-                <p className="text-slate-500 text-center py-10">Coșul este gol.</p>
+                <p className="text-stone-500 text-center py-12 text-sm font-light">
+                  Coșul este gol. Adaugă preparate din meniu!
+                </p>
               ) : (
-                <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
+                <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
                   {cart.map((item) => (
                     <div
                       key={item.cartItemId}
-                      className="bg-slate-900/80 border border-slate-700/80 p-3.5 rounded-xl flex justify-between items-start text-left"
+                      className="bg-[#141010] border border-amber-900/30 p-3.5 rounded-xl flex items-center justify-between"
                     >
-                      <div className="pr-2">
+                      <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-white text-sm">{item.title}</h4>
-                          <span
-                            className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase ${
-                              item.orderType === 'group'
-                                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                                : 'bg-slate-800 text-slate-400'
-                            }`}
-                          >
-                            {item.orderType}
+                          <h4 className="font-bold text-amber-100 text-sm font-serif">
+                            {item.title}
+                          </h4>
+                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                            {item.userName}
                           </span>
                         </div>
-                        <span className="text-emerald-400 font-bold text-xs">{item.price} MDL</span>
-
+                        <p className="text-xs text-amber-400 font-bold">{item.price} MDL</p>
                         {item.chefNote && (
-                          <p className="text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/20 rounded-md p-1.5 mt-2 flex items-center gap-1">
-                            <MessageSquare className="w-3 h-3 shrink-0" />
-                            <span>{item.chefNote}</span>
+                          <p className="text-[11px] text-stone-400 italic">
+                            Notă: "{item.chefNote}"
                           </p>
                         )}
                       </div>
-
                       <button
                         onClick={() => handleRemoveFromCart(item.cartItemId)}
-                        className="text-slate-500 hover:text-rose-400 p-1 transition-colors"
+                        className="text-stone-500 hover:text-rose-400 p-2 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -127,35 +160,36 @@ export default function App() {
               )}
             </div>
 
-            {/* Subsol Coș */}
-            <div className="pt-4 border-t border-slate-700">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-slate-400 font-medium">Total de plată:</span>
-                <span className="text-xl font-extrabold text-emerald-400">{totalPrice} MDL</span>
+            {/* Total și Trimitere */}
+            {cart.length > 0 && (
+              <div className="pt-4 border-t border-amber-900/30 space-y-4">
+                <div className="flex justify-between items-center text-lg font-bold">
+                  <span className="text-stone-300 font-serif">Total Comandă:</span>
+                  <span className="text-amber-400 font-sans text-xl">{cartTotal} MDL</span>
+                </div>
+                <button
+                  onClick={handleSendToKitchen}
+                  className="w-full py-3.5 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold rounded-xl transition-all shadow-lg text-sm cursor-pointer"
+                >
+                  Trimite Comanda la Bucătărie ➔
+                </button>
               </div>
-              <button
-                disabled={cart.length === 0}
-                onClick={handleSendToKitchen}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold rounded-xl transition-all shadow-md cursor-pointer"
-              >
-                Trimite Comanda către Bucătărie
-              </button>
-            </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Corpul Paginii */}
-      <main>
+      {/* Conținutul Paginii */}
+      <main className="pb-20">
         {view === 'table' ? (
           <MenuCatalog onAddToCart={handleAddToCart} />
         ) : (
-          <KDS 
-            orders={kitchenOrders} 
-            onCompleteOrder={() => setKitchenOrders([])} 
-          />
+          <KDS orders={kitchenOrders} onCompleteOrder={() => setKitchenOrders([])} />
         )}
       </main>
+
+      {/* Widget Asistent AI */}
+      <AIChat onAddToCart={handleAddToCart} />
     </div>
   );
 }

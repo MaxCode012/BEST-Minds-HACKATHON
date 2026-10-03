@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
-@layer base {
-  body {
-    @apply bg-slate-900 text-slate-100 min-h-screen antialiased;
-    margin: 0;
-    padding: 0;
-  }
+:root {
+  background-color: #0f0d0e;
+  color: #f5f5f4;
+}
 
-  /* Resetăm proprietățile care stricau layout-ul flex/grid */
-  #root {
-    width: 100%;
-    min-h-screen: 100vh;
-    margin: 0;
-    padding: 0;
-    text-align: left;
-    border: none;
-  }
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: #0f0d0e !important;
+  color: #f5f5f4;
+}
+
+#root {
+  min-height: 100vh;
+  background-color: #0f0d0e !important;
 }
