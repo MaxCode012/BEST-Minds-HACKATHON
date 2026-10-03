@@ -29,6 +29,50 @@ export interface CartItem extends MenuItem {
   userName: string;
 }
 
+export const mapApiToMenuItem = (item: any): MenuItem => {
+  // Convert comma-separated string ("Lactoză, Gluten") into string[]
+  let parsedAllergens: string[] = [];
+  if (Array.isArray(item.allergens)) {
+    parsedAllergens = item.allergens;
+  } else if (typeof item.allergens === 'string' && item.allergens.trim().length > 0) {
+    parsedAllergens = item.allergens.split(',').map((a: string) => a.trim());
+  }
+
+  return {
+    id: Number(item.id ?? item.Id ?? 0),
+    title: item.name ?? item.Name ?? item.title ?? item.Title ?? 'Preparat fără nume',
+    price: Number(item.price ?? item.Price ?? 0),
+    category: item.category ?? item.Category ?? 'General',
+    allergens: parsedAllergens,
+    description: item.description ?? item.Description ?? '',
+    image:
+      item.image_url ??
+      item.imageUrl ??
+      item.image ??
+      item.Image ??
+      'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80',
+  };
+};
+
+// Fetch function to call C# backend
+export const fetchMenuFromBackend = async (): Promise<MenuItem[]> => {
+  try {
+    const response = await fetch('http://172.30.69.205:5000/api/menu');
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error: ${response.status}`);
+    }
+
+    const rawData = await response.json();
+    return rawData.map(mapApiToMenuItem);
+  } catch (error) {
+    console.error('Failed to fetch backend menu, falling back to MOCK_MENU:', error);
+    return MOCK_MENU; // Fallback to mock data if backend fails
+  }
+};
+
+
+
 export const MOCK_MENU: MenuItem[] = [
   {
     id: 1,
