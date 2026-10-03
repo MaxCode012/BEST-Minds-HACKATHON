@@ -12,7 +12,11 @@ class Program
     static async Task Main(string[] args)
     {
         // 1. OpenRouter Configuration
-        string apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY") ?? "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";
+        WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+        string apiKey = builder.Configuration["OpenRouterApiKey"]
+            ?? Environment.GetEnvironmentVariable("OPENROUTER_API_KEY")
+            ?? throw new InvalidOperationException("API key not found.");
         string modelName = "inclusionai/ling-3.1-flash"; // Or "google/gemini-flash-1.5"
 
         // 2. Full Menu with Romanian Items & Market Prices in MDL
