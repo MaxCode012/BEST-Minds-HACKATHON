@@ -346,10 +346,3 @@ export default function App() {
     </div>
   );
 }
-
-
-      {/* Widget Asistent AI */}
-      <AIChat onAddToCart={handleAddToCart} />
-    </div>
-  );
-}

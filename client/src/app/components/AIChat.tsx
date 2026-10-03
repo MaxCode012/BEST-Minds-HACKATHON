@@ -81,52 +81,54 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
   // Trimiterea pachetului de date către C# Backend Controller (api/Recommendations)
   const submitPreferencesToBackend = async () => {
-    setLoading(true);
+  setLoading(true);
 
-    const payload = {
-      userId: MOCK_USER.id || "user-1",
-      userName: MOCK_USER.name,
-      hungerLevel: prefs.hungerLevel,
-      dietType: prefs.dietType,
-      wantsDrinks: prefs.drinks,
-      wantsDessert: prefs.dessert,
-      maxBudget: typeof prefs.budget === 'number' ? prefs.budget : null,
-      allergies: prefs.allergies,
-    };
+  // Construim exact structura cerută de record-ul C# UserRecommendationRequest
+  const payload = {
+    budget: typeof prefs.budget === 'number' ? prefs.budget : null,
+    allergies: prefs.allergies && prefs.allergies.length > 0 ? prefs.allergies : [],
+    wants_drink: Boolean(prefs.drinks),
+    wants_dessert: Boolean(prefs.dessert),
+    preferences: [
+      prefs.hungerLevel === 'hearty' ? 'masă copioasă' : 'gustare ușoară',
+      prefs.dietType !== 'all' ? prefs.dietType : null,
+    ].filter(Boolean) as string[],
+  };
 
-    try {
-      const response = await fetch('http://localhost:5277/api/Recommendations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+  console.log('Trimitem payload către C#:', payload);
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Răspuns primit de la Controller-ul C#:', data);
+  try {
+    const response = await fetch('http://172.30.69.205:5000/api/recommendations', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
 
-        // Mapăm datele returnate din Backend
-        if (Array.isArray(data)) {
-          setRecommendations(data);
-        } else if (data.items && Array.isArray(data.items)) {
-          setRecommendations(data.items);
-        } else {
-          setRecommendations([]);
-        }
+    if (response.ok) {
+      const data = await response.json();
+      console.log('Meniu primit de la C#:', data);
+
+      if (Array.isArray(data)) {
+        setRecommendations(data);
+      } else if (data.items && Array.isArray(data.items)) {
+        setRecommendations(data.items);
       } else {
-        console.error('Eroare HTTP de la serverul C#:', response.status);
         setRecommendations([]);
       }
-    } catch (error) {
-      console.error('Eroare la trimiterea fetch către http://localhost:5277/api/Recommendations:', error);
+    } else {
+      console.error('Eroare la răspunsul HTTP din C#:', response.status);
       setRecommendations([]);
-    } finally {
-      setLoading(false);
-      setStep(5);
     }
-  };
+  } catch (error) {
+    console.error('Eroare la conexiunea cu http://localhost:5277/api/Recommendations:', error);
+    setRecommendations([]);
+  } finally {
+    setLoading(false);
+    setStep(5);
+  }
+};
 
   const handleAddDirectly = (item: MenuItem) => {
     if (onAddToCart) {
