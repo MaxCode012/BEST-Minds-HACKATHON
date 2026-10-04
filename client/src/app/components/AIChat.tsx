@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Sparkles, X, Bot, Check, RefreshCw, Plus, DollarSign, AlertTriangle, Loader2 } from 'lucide-react';
-import { MOCK_MENU, MOCK_USER, MenuItem } from '../data/mockData';
+import { Sparkles, X, Bot, Check, RefreshCw, Plus, DollarSign, AlertTriangle, Loader2, QrCode, User } from 'lucide-react';
+import { MOCK_USER, MenuItem } from '../data/mockData';
+import { QRScannerModal } from './QRScannerModal';
 
 interface Preferences {
   hungerLevel: 'light' | 'hearty';
@@ -29,6 +30,9 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
   const [addedItemIds, setAddedItemIds] = useState<number[]>([]);
   const [customAllergyInput, setCustomAllergyInput] = useState('');
 
+  const [isScanningCamera, setIsScanningCamera] = useState(false);
+  const [scannedUser, setScannedUser] = useState<{ id: string; name: string } | null>(null);
+
   const [prefs, setPrefs] = useState<Preferences>({
     hungerLevel: 'hearty',
     dietType: 'all',
@@ -41,6 +45,48 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
   const [recommendations, setRecommendations] = useState<MenuItem[]>([]);
   const [aiReasoning, setAiReasoning] = useState<string>('');
   const [totalCost, setTotalCost] = useState<number | null>(null);
+
+  // Directly fetch profile using the raw scanned text ID
+  const loadUserProfileFromBackend = async (userId: string) => {
+    const cleanId = userId.trim();
+    if (!cleanId) return;
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`http://172.30.69.205:5000/api/users/${cleanId}`);
+
+      if (response.ok) {
+        const userData = await response.json();
+        console.log('[PLAIN TEXT QR SUCCESS]: Profil găsit în C#:', userData);
+
+        const loadedAllergies: string[] = userData.allergies ?? userData.Allergies ?? [];
+        const userName: string = userData.name ?? userData.Name ?? 'Alex';
+
+        setPrefs((prev) => ({
+          ...prev,
+          allergies: loadedAllergies,
+        }));
+
+        setScannedUser({ id: cleanId, name: userName });
+        setIsOpen(true);
+      } else {
+        alert(`Utilizatorul cu ID '${cleanId}' nu există în baza de date.`);
+      }
+    } catch (error) {
+      console.error('Eroare la conectarea cu serverul C#:', error);
+      alert('Eroare la conectarea cu serverul.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Triggered directly when the camera scans the plain text QR code
+  const handleCameraQrSuccess = (decodedText: string) => {
+    setIsScanningCamera(false);
+    console.log('[CAMERA READ RAW STRING]:', decodedText);
+    loadUserProfileFromBackend(decodedText);
+  };
 
   const handleReset = () => {
     setStep(1);
@@ -58,6 +104,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
     setTotalCost(null);
     setAddedItemIds([]);
     setCustomAllergyInput('');
+    setScannedUser(null);
   };
 
   const toggleAllergy = (allergy: string) => {
@@ -83,11 +130,11 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
     }
   };
 
-  // Trimiterea pachetului de date către C# Backend Controller
   const submitPreferencesToBackend = async () => {
     setLoading(true);
 
     const payload = {
+      user_id: scannedUser?.id || 'GUEST',
       budget: typeof prefs.budget === 'number' ? prefs.budget : null,
       allergies: prefs.allergies && prefs.allergies.length > 0 ? prefs.allergies : [],
       wants_drink: Boolean(prefs.drinks),
@@ -98,26 +145,19 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
       ].filter(Boolean) as string[],
     };
 
-    console.log('Trimitem payload către C#:', payload);
-
     try {
       const response = await fetch('http://172.30.69.205:5000/api/recommendations', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Meniu primit de la C#:', data);
 
-        // Salvează explicația generală și costul total
         setAiReasoning(data.reasoning ?? data.Reasoning ?? '');
         setTotalCost(data.total_cost ?? data.TotalCost ?? null);
 
-        // FIX: C# returnează lista în data.selected_items
         const rawItems = data.selected_items ?? data.SelectedItems ?? data.items ?? (Array.isArray(data) ? data : []);
 
         const normalizedItems: MenuItem[] = rawItems.map((item: any, index: number) => {
@@ -146,14 +186,12 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
           };
         });
 
-        console.log('Recomandări procesate cu succes:', normalizedItems);
         setRecommendations(normalizedItems);
       } else {
-        console.error('Eroare la răspunsul HTTP din C#:', response.status);
         setRecommendations([]);
       }
     } catch (error) {
-      console.error('Eroare la conexiunea cu http://172.30.69.205:5000/api/recommendations:', error);
+      console.error('Eroare la trimiterea cererii către C#:', error);
       setRecommendations([]);
     } finally {
       setLoading(false);
@@ -163,14 +201,22 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
   const handleAddDirectly = (item: MenuItem) => {
     if (onAddToCart) {
-      onAddToCart(item, 'Recomandat de Sommelier AI', 'individual', MOCK_USER.name);
+      onAddToCart(item, 'Recomandat de Sommelier AI', 'individual', scannedUser?.name || MOCK_USER.name);
       setAddedItemIds((prev) => [...prev, item.id]);
     }
   };
 
   return (
     <div className="fixed bottom-6 right-6 z-50 font-sans">
-      {/* Buton Flotant Auriu */}
+      {/* Live Camera Scanner */}
+      {isScanningCamera && (
+        <QRScannerModal
+          onScanSuccess={handleCameraQrSuccess}
+          onClose={() => setIsScanningCamera(false)}
+        />
+      )}
+
+      {/* Floating Button */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -181,9 +227,9 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
         </button>
       )}
 
-      {/* Fereastra Chat / Chestionar */}
+      {/* Chat Drawer */}
       {isOpen && (
-        <div className="bg-[#1c1817] border border-amber-900/50 w-80 sm:w-96 rounded-2xl shadow-2xl flex flex-col h-[540px] overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="bg-[#1c1817] border border-amber-900/50 w-80 sm:w-96 rounded-2xl shadow-2xl flex flex-col h-[540px] overflow-hidden">
           {/* Header */}
           <div className="bg-[#141010] p-4 border-b border-amber-900/30 flex justify-between items-center">
             <div className="flex items-center gap-2.5">
@@ -197,17 +243,40 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-stone-400 hover:text-amber-200 p-1 transition-colors cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setIsScanningCamera(true)}
+                className="p-1.5 rounded-lg bg-stone-800 hover:bg-amber-600/20 text-amber-400 border border-amber-900/40 transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-semibold"
+                title="Scanează QR"
+              >
+                <QrCode className="w-4 h-4" />
+                <span className="hidden sm:inline">Scanează</span>
+              </button>
+
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-stone-400 hover:text-amber-200 p-1 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
-          {/* Corp Quiz */}
+          {/* User Identified Badge */}
+          {scannedUser && (
+            <div className="bg-amber-950/40 border-b border-amber-900/30 px-4 py-1.5 flex items-center justify-between text-[11px]">
+              <span className="text-amber-300 font-medium flex items-center gap-1.5">
+                <User className="w-3 h-3 text-amber-400" /> Profil: <strong>{scannedUser.name}</strong>
+              </span>
+              <span className="text-stone-400 text-[10px]">Alergii sincronizate</span>
+            </div>
+          )}
+
+          {/* Steps 1 to 5 Content */}
           <div className="flex-1 p-5 overflow-y-auto bg-[#181413] flex flex-col justify-start">
-            {/* PASUL 1: FOAME & DIETĂ */}
+            {/* Step 1 */}
             {step === 1 && (
               <div className="space-y-4 my-auto">
                 <h3 className="text-amber-100 font-semibold text-sm text-center font-serif">
@@ -271,7 +340,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
               </div>
             )}
 
-            {/* PASUL 2: BĂUTURI & DESERT */}
+            {/* Step 2 */}
             {step === 2 && (
               <div className="space-y-4 text-center my-auto">
                 <h3 className="text-amber-100 font-semibold text-sm font-serif">
@@ -325,7 +394,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
               </div>
             )}
 
-            {/* PASUL 3: BUGET */}
+            {/* Step 3 */}
             {step === 3 && (
               <div className="space-y-4 text-center my-auto">
                 <h3 className="text-amber-100 font-semibold text-sm font-serif">Care este bugetul maxim? 💵</h3>
@@ -380,7 +449,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
               </div>
             )}
 
-            {/* PASUL 4: ALERGII & TRIMITERE LA API C# */}
+            {/* Step 4 */}
             {step === 4 && (
               <div className="space-y-4 my-auto">
                 <div className="text-center">
@@ -473,7 +542,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
               </div>
             )}
 
-            {/* PASUL 5: AFISARE RĂSPUNS BACKEND */}
+            {/* Step 5 */}
             {step === 5 && (
               <div className="space-y-3 text-left">
                 <div className="flex justify-between items-center mb-1">
@@ -488,7 +557,6 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                   </button>
                 </div>
 
-                {/* Explicația generală generată de AI */}
                 {aiReasoning && (
                   <div className="bg-amber-950/30 border border-amber-800/40 p-2.5 rounded-xl text-stone-300 text-[11px] leading-relaxed font-sans">
                     💡 <span className="italic">{aiReasoning}</span>
@@ -511,9 +579,9 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                           <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
                               {item.image && (
-                                <img 
-                                  src={item.image} 
-                                  alt={item.title} 
+                                <img
+                                  src={item.image}
+                                  alt={item.title}
                                   className="w-12 h-12 object-cover rounded-lg border border-amber-900/20 shrink-0"
                                 />
                               )}
@@ -542,7 +610,6 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                             </button>
                           </div>
 
-                          {/* Afișează motivul individual pentru fiecare fel de mâncare */}
                           {item.description && (
                             <p className="text-[11px] text-stone-400 italic border-t border-stone-800/60 pt-1.5 mt-0.5">
                               {item.description}
