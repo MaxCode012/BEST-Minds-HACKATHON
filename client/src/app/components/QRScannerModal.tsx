@@ -101,40 +101,40 @@ export const QRScannerModal: React.FC<QRScannerModalProps> = ({ onScanSuccess, o
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 font-sans">
-      <div className="bg-[#1c1817] border border-amber-900/50 p-5 rounded-2xl w-full max-w-sm text-center relative shadow-2xl">
+    <div className="fixed inset-0 z-50 bg-ink/60 backdrop-blur-sm flex items-center justify-center p-4 font-sans">
+      <div className="bg-white border border-line p-5 rounded-2xl w-full max-w-sm text-center relative shadow-2xl">
         <button
           onClick={handleClose}
-          className="absolute top-3 right-3 text-stone-400 hover:text-amber-200 transition-colors p-1 cursor-pointer"
+          className="absolute top-3 right-3 text-muted hover:text-ink transition-colors p-1 cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="w-10 h-10 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto mb-2">
+        <div className="w-10 h-10 rounded-full bg-brand-soft border border-brand/20 text-brand flex items-center justify-center mx-auto mb-2">
           <Camera className="w-5 h-5" />
         </div>
 
-        <h3 className="text-amber-100 font-serif font-bold text-base mb-1">
+        <h3 className="text-ink font-serif font-bold text-base mb-1">
           Scanați Codul QR
         </h3>
-        <p className="text-xs text-stone-400 mb-4">
+        <p className="text-xs text-muted mb-4">
           Îndreptați camera foto către codul QR pentru preluarea preferințelor.
         </p>
 
         {errorMsg ? (
-          <div className="p-3 bg-rose-950/60 border border-rose-700/50 rounded-xl text-rose-300 text-xs flex items-center gap-2 text-left">
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2 text-left">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         ) : (
-          <div className="relative overflow-hidden rounded-xl border border-stone-800 bg-black min-h-[250px]">
+          <div className="relative overflow-hidden rounded-xl border border-line bg-black min-h-[250px]">
             <div id="qr-camera-stream" className="w-full h-full"></div>
           </div>
         )}
 
         <button
           onClick={handleClose}
-          className="mt-4 w-full py-2.5 bg-stone-800 hover:bg-stone-700 text-stone-300 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+          className="mt-4 w-full py-2.5 bg-sand hover:bg-line text-ink font-bold rounded-xl text-xs transition-colors cursor-pointer"
         >
           Anulează
         </button>

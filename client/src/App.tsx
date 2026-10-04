@@ -1,32 +1,15 @@
-import React, { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { MenuCatalog } from './app/components/MenuCatalog';
 import { KDS } from './app/components/KDS';
 import { AIChat } from './app/components/AIChat';
 import { MenuItem, CartItem, MOCK_USER } from './app/data/mockData';
 import { UtensilsCrossed, ShoppingBag, ChefHat, X, Trash2 } from 'lucide-react';
 
-type Recommendation = {
-  orderId: number;
-  requestedAt: string;
-  selectedItems: { id: number; name: string; price: number; category: string; reason: string }[];
-  totalCost: number;
-  remainingBudget: number;
-  reasoning: string;
-};
-
 export default function App() {
   const [view, setView] = useState<'table' | 'kds'>('table');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [kitchenOrders, setKitchenOrders] = useState<CartItem[]>([]);
-  const [orderId, setOrderId] = useState('123');
-  const [preferences, setPreferences] = useState('spicy');
-  const [budget, setBudget] = useState('250');
-  const [includeDrink, setIncludeDrink] = useState(true);
-  const [requestedAt, setRequestedAt] = useState('');
-  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
 
   const handleAddToCart = (
     item: MenuItem,
@@ -58,60 +41,29 @@ export default function App() {
 
   const cartTotal = cart.reduce((acc, item) => acc + item.price, 0);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
-    setError('');
-    setRecommendation(null);
-
-    try {
-      const response = await fetch('/api/recommendations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: Number(orderId),
-          preferences: preferences.split(',').map((value) => value.trim()).filter(Boolean),
-          budget: Number(budget),
-          includeDrink,
-          requestedAt: requestedAt ? new Date(requestedAt).toISOString() : null,
-        }),
-      });
-
-      const body = await response.json();
-      if (!response.ok) {
-        throw new Error(body.detail ?? body.title ?? 'Could not get recommendations.');
-      }
-      setRecommendation(body as Recommendation);
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Could not reach the backend.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-[#0f0d0e] text-stone-100 font-sans selection:bg-amber-500 selection:text-stone-950">
-      <header className="bg-[#141010]/90 border-b border-amber-900/40 sticky top-0 z-40 backdrop-blur-md">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-cream text-ink font-sans selection:bg-brand selection:text-white">
+      <header className="bg-white/85 border-b border-line sticky top-0 z-40 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-brand text-white flex items-center justify-center shadow-sm shadow-brand/30">
               <UtensilsCrossed className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="font-serif text-xl font-bold text-amber-100 tracking-wide">
+              <h1 className="font-serif text-xl font-bold text-ink tracking-wide leading-tight">
                 SmartResto
               </h1>
-              <p className="text-[11px] text-stone-400 font-medium">Fine Dining Experience</p>
+              <p className="text-[11px] text-muted font-medium">Fine Dining Experience</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 bg-[#1a1615] p-1.5 rounded-xl border border-amber-900/30">
+          <div className="flex items-center gap-1 bg-sand p-1 rounded-xl">
             <button
               onClick={() => setView('table')}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 view === 'table'
-                  ? 'bg-amber-600 text-stone-950 shadow-md'
-                  : 'text-stone-400 hover:text-stone-200'
+                  ? 'bg-white text-brand shadow-sm'
+                  : 'text-muted hover:text-ink'
               }`}
             >
               Meniu Masă
@@ -120,13 +72,13 @@ export default function App() {
               onClick={() => setView('kds')}
               className={`px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
                 view === 'kds'
-                  ? 'bg-amber-600 text-stone-950 shadow-md'
-                  : 'text-stone-400 hover:text-stone-200'
+                  ? 'bg-white text-brand shadow-sm'
+                  : 'text-muted hover:text-ink'
               }`}
             >
               <ChefHat className="w-4 h-4" /> Bucătărie (KDS)
               {kitchenOrders.length > 0 && (
-                <span className="bg-rose-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-extrabold">
+                <span className="bg-brand text-white text-[10px] px-1.5 py-0.5 rounded-full font-extrabold">
                   {kitchenOrders.length}
                 </span>
               )}
@@ -135,12 +87,12 @@ export default function App() {
 
           <button
             onClick={() => setIsCartOpen(true)}
-            className="relative bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all cursor-pointer"
+            className="bg-brand hover:bg-brand-dark text-white px-4 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
           >
             <ShoppingBag className="w-4 h-4" />
             <span>Coș</span>
             {cart.length > 0 && (
-              <span className="bg-amber-500 text-stone-950 text-xs px-2 py-0.5 rounded-full font-extrabold">
+              <span className="bg-white text-brand text-xs px-2 py-0.5 rounded-full font-extrabold">
                 {cart.length}
               </span>
             )}
@@ -149,23 +101,23 @@ export default function App() {
       </header>
 
       {isCartOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex justify-end">
-          <div className="bg-[#1c1817] border-l border-amber-900/40 w-full max-w-md h-full flex flex-col justify-between p-6 shadow-2xl animate-in slide-in-from-right duration-200">
+        <div className="fixed inset-0 bg-ink/40 backdrop-blur-sm z-50 flex justify-end">
+          <div className="bg-white border-l border-line w-full max-w-md h-full flex flex-col justify-between p-6 shadow-2xl">
             <div>
-              <div className="flex justify-between items-center mb-6 pb-4 border-b border-amber-900/30">
-                <h3 className="text-xl font-bold font-serif text-amber-100 flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5 text-amber-400" /> Comanda Ta
+              <div className="flex justify-between items-center mb-6 pb-4 border-b border-line">
+                <h3 className="text-xl font-bold font-serif text-ink flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 text-brand" /> Comanda Ta
                 </h3>
                 <button
                   onClick={() => setIsCartOpen(false)}
-                  className="text-stone-400 hover:text-amber-200 p-1"
+                  className="text-muted hover:text-ink p-1 cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {cart.length === 0 ? (
-                <p className="text-stone-500 text-center py-12 text-sm font-light">
+                <p className="text-muted text-center py-12 text-sm">
                   Coșul este gol. Adaugă preparate din meniu!
                 </p>
               ) : (
@@ -173,27 +125,23 @@ export default function App() {
                   {cart.map((item) => (
                     <div
                       key={item.cartItemId}
-                      className="bg-[#141010] border border-amber-900/30 p-3.5 rounded-xl flex items-center justify-between"
+                      className="bg-cream border border-line p-3.5 rounded-xl flex items-center justify-between"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-amber-100 text-sm font-serif">
-                            {item.title}
-                          </h4>
-                          <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                          <h4 className="font-bold text-ink text-sm font-serif">{item.title}</h4>
+                          <span className="text-[10px] font-bold text-brand-dark bg-brand-soft px-2 py-0.5 rounded">
                             {item.userName}
                           </span>
                         </div>
-                        <p className="text-xs text-amber-400 font-bold">{item.price} MDL</p>
+                        <p className="text-xs text-brand font-bold">{item.price} MDL</p>
                         {item.chefNote && (
-                          <p className="text-[11px] text-stone-400 italic">
-                            Notă: "{item.chefNote}"
-                          </p>
+                          <p className="text-[11px] text-muted italic">Notă: "{item.chefNote}"</p>
                         )}
                       </div>
                       <button
                         onClick={() => handleRemoveFromCart(item.cartItemId)}
-                        className="text-stone-500 hover:text-rose-400 p-2 transition-colors"
+                        className="text-muted hover:text-rose-600 p-2 transition-colors cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -204,14 +152,14 @@ export default function App() {
             </div>
 
             {cart.length > 0 && (
-              <div className="pt-4 border-t border-amber-900/30 space-y-4">
+              <div className="pt-4 border-t border-line space-y-4">
                 <div className="flex justify-between items-center text-lg font-bold">
-                  <span className="text-stone-300 font-serif">Total Comandă:</span>
-                  <span className="text-amber-400 font-sans text-xl">{cartTotal} MDL</span>
+                  <span className="text-ink font-serif">Total Comandă:</span>
+                  <span className="text-brand font-sans text-xl">{cartTotal} MDL</span>
                 </div>
                 <button
                   onClick={handleSendToKitchen}
-                  className="w-full py-3.5 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold rounded-xl transition-all shadow-lg text-sm cursor-pointer"
+                  className="w-full py-3.5 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl transition-colors shadow-sm text-sm cursor-pointer"
                 >
                   Trimite Comanda la Bucătărie ➔
                 </button>
@@ -228,8 +176,6 @@ export default function App() {
           <KDS orders={kitchenOrders} onCompleteOrder={() => setKitchenOrders([])} />
         )}
       </main>
-
-      
 
       <AIChat onAddToCart={handleAddToCart} />
     </div>

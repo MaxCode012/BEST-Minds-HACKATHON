@@ -220,25 +220,25 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-2.5 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold px-5 py-3.5 rounded-full shadow-2xl transition-all hover:scale-105 cursor-pointer border border-amber-400/30"
+          className="flex items-center gap-2.5 bg-brand hover:bg-brand-dark text-white font-bold px-5 py-3.5 rounded-full shadow-xl shadow-brand/30 transition-all hover:scale-105 cursor-pointer border border-brand/30"
         >
-          <Sparkles className="w-5 h-5 text-stone-950 animate-pulse" />
+          <Sparkles className="w-5 h-5 text-white animate-pulse" />
           <span>Sommelier AI</span>
         </button>
       )}
 
       {/* Chat Drawer */}
       {isOpen && (
-        <div className="bg-[#1c1817] border border-amber-900/50 w-80 sm:w-96 rounded-2xl shadow-2xl flex flex-col h-[540px] overflow-hidden">
+        <div className="bg-white border border-line w-80 sm:w-96 rounded-2xl shadow-2xl flex flex-col h-[540px] overflow-hidden">
           {/* Header */}
-          <div className="bg-[#141010] p-4 border-b border-amber-900/30 flex justify-between items-center">
+          <div className="bg-white p-4 border-b border-line flex justify-between items-center">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-brand-soft border border-brand/20 text-brand flex items-center justify-center">
                 <Bot className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-amber-100 text-sm font-serif">SmartResto AI</h4>
-                <p className="text-[11px] text-amber-400 font-medium">
+                <h4 className="font-bold text-ink text-sm font-serif">SmartResto AI</h4>
+                <p className="text-[11px] text-brand font-medium">
                   {step <= 4 ? `Pasul ${step} din 4` : 'Meniu Recomandat'}
                 </p>
               </div>
@@ -248,7 +248,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
               <button
                 type="button"
                 onClick={() => setIsScanningCamera(true)}
-                className="p-1.5 rounded-lg bg-stone-800 hover:bg-amber-600/20 text-amber-400 border border-amber-900/40 transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-semibold"
+                className="p-1.5 rounded-lg bg-sand hover:bg-brand-soft text-brand-dark border border-line transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-semibold"
                 title="Scanează QR"
               >
                 <QrCode className="w-4 h-4" />
@@ -257,7 +257,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-stone-400 hover:text-amber-200 p-1 transition-colors cursor-pointer"
+                className="text-muted hover:text-ink p-1 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -266,33 +266,33 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
           {/* User Identified Badge */}
           {scannedUser && (
-            <div className="bg-amber-950/40 border-b border-amber-900/30 px-4 py-1.5 flex items-center justify-between text-[11px]">
-              <span className="text-amber-300 font-medium flex items-center gap-1.5">
-                <User className="w-3 h-3 text-amber-400" /> Profil: <strong>{scannedUser.name}</strong>
+            <div className="bg-brand-soft border-b border-line px-4 py-1.5 flex items-center justify-between text-[11px]">
+              <span className="text-brand-dark font-medium flex items-center gap-1.5">
+                <User className="w-3 h-3 text-brand" /> Profil: <strong>{scannedUser.name}</strong>
               </span>
-              <span className="text-stone-400 text-[10px]">Alergii sincronizate</span>
+              <span className="text-muted text-[10px]">Alergii sincronizate</span>
             </div>
           )}
 
           {/* Steps 1 to 5 Content */}
-          <div className="flex-1 p-5 overflow-y-auto bg-[#181413] flex flex-col justify-start">
+          <div className="flex-1 p-5 overflow-y-auto bg-cream flex flex-col justify-start">
             {/* Step 1 */}
             {step === 1 && (
               <div className="space-y-4 my-auto">
-                <h3 className="text-amber-100 font-semibold text-sm text-center font-serif">
+                <h3 className="text-ink font-semibold text-sm text-center font-serif">
                   Cât de foame vă este și ce preferințe aveți? 🍽️
                 </h3>
                 
                 <div>
-                  <label className="text-[11px] text-stone-400 font-semibold uppercase tracking-wider block mb-1.5">Mărime Masă:</label>
+                  <label className="text-[11px] text-muted font-semibold uppercase tracking-wider block mb-1.5">Mărime Masă:</label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setPrefs({ ...prefs, hungerLevel: 'light' })}
                       className={`py-2.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
                         prefs.hungerLevel === 'light'
-                          ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                          : 'bg-stone-900 border-stone-800 text-stone-400'
+                          ? 'bg-brand-soft border-brand text-brand-dark'
+                          : 'bg-white border-line text-muted hover:border-brand/40'
                       }`}
                     >
                       🥗 Gustare Ușoară
@@ -302,8 +302,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                       onClick={() => setPrefs({ ...prefs, hungerLevel: 'hearty' })}
                       className={`py-2.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
                         prefs.hungerLevel === 'hearty'
-                          ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                          : 'bg-stone-900 border-stone-800 text-stone-400'
+                          ? 'bg-brand-soft border-brand text-brand-dark'
+                          : 'bg-white border-line text-muted hover:border-brand/40'
                       }`}
                     >
                       🥩 Masă Copioasă
@@ -312,7 +312,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                 </div>
 
                 <div>
-                  <label className="text-[11px] text-stone-400 font-semibold uppercase tracking-wider block mb-1.5">Preferință Dietă:</label>
+                  <label className="text-[11px] text-muted font-semibold uppercase tracking-wider block mb-1.5">Preferință Dietă:</label>
                   <div className="grid grid-cols-3 gap-1.5">
                     {(['all', 'vegetarian', 'vegan'] as const).map((d) => (
                       <button
@@ -321,8 +321,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                         onClick={() => setPrefs({ ...prefs, dietType: d })}
                         className={`py-2 text-[11px] font-semibold rounded-xl border capitalize transition-all cursor-pointer ${
                           prefs.dietType === d
-                            ? 'bg-amber-500/20 border-amber-500 text-amber-300'
-                            : 'bg-stone-900 border-stone-800 text-stone-400'
+                            ? 'bg-brand-soft border-brand text-brand-dark'
+                            : 'bg-white border-line text-muted hover:border-brand/40'
                         }`}
                       >
                         {d === 'all' ? 'Toate' : d}
@@ -333,7 +333,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
                 <button
                   onClick={() => setStep(2)}
-                  className="w-full mt-2 py-3 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md"
+                  className="w-full mt-2 py-3 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md"
                 >
                   Înainte ➔
                 </button>
@@ -343,33 +343,33 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
             {/* Step 2 */}
             {step === 2 && (
               <div className="space-y-4 text-center my-auto">
-                <h3 className="text-amber-100 font-semibold text-sm font-serif">
+                <h3 className="text-ink font-semibold text-sm font-serif">
                   Doriți o băutură sau un desert? 🍷🍰
                 </h3>
 
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between bg-stone-900 p-3 rounded-xl border border-stone-800">
-                    <span className="text-xs text-stone-200 font-medium">Include Băutură</span>
+                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-line">
+                    <span className="text-xs text-ink font-medium">Include Băutură</span>
                     <button
                       onClick={() => setPrefs({ ...prefs, drinks: !prefs.drinks })}
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         prefs.drinks
-                          ? 'bg-amber-600 text-stone-950'
-                          : 'bg-stone-800 text-stone-400'
+                          ? 'bg-brand text-white'
+                          : 'bg-sand text-muted'
                       }`}
                     >
                       {prefs.drinks ? 'DA' : 'NU'}
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between bg-stone-900 p-3 rounded-xl border border-stone-800">
-                    <span className="text-xs text-stone-200 font-medium">Include Desert</span>
+                  <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-line">
+                    <span className="text-xs text-ink font-medium">Include Desert</span>
                     <button
                       onClick={() => setPrefs({ ...prefs, dessert: !prefs.dessert })}
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         prefs.dessert
-                          ? 'bg-amber-600 text-stone-950'
-                          : 'bg-stone-800 text-stone-400'
+                          ? 'bg-brand text-white'
+                          : 'bg-sand text-muted'
                       }`}
                     >
                       {prefs.dessert ? 'DA' : 'NU'}
@@ -380,13 +380,13 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setStep(1)}
-                    className="flex-1 py-2.5 bg-stone-800 text-stone-300 font-bold rounded-xl transition-all cursor-pointer text-xs"
+                    className="flex-1 py-2.5 bg-sand hover:bg-line text-ink font-bold rounded-xl transition-all cursor-pointer text-xs"
                   >
                     Înapoi
                   </button>
                   <button
                     onClick={() => setStep(3)}
-                    className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md"
+                    className="flex-1 py-2.5 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md"
                   >
                     Înainte ➔
                   </button>
@@ -397,11 +397,11 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
             {/* Step 3 */}
             {step === 3 && (
               <div className="space-y-4 text-center my-auto">
-                <h3 className="text-amber-100 font-semibold text-sm font-serif">Care este bugetul maxim? 💵</h3>
+                <h3 className="text-ink font-semibold text-sm font-serif">Care este bugetul maxim? 💵</h3>
 
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <DollarSign className="w-4 h-4 text-amber-500" />
+                    <DollarSign className="w-4 h-4 text-brand" />
                   </div>
                   <input
                     type="number"
@@ -413,9 +413,9 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                         budget: e.target.value ? Number(e.target.value) : '',
                       })
                     }
-                    className="w-full pl-9 pr-12 py-3 bg-stone-900 border border-stone-800 rounded-xl text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500 text-sm font-bold"
+                    className="w-full pl-9 pr-12 py-3 bg-white border border-line rounded-xl text-ink placeholder-muted/60 focus:outline-none focus:border-brand text-sm font-bold"
                   />
-                  <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-stone-400 font-bold">
+                  <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-xs text-muted font-bold">
                     MDL
                   </span>
                 </div>
@@ -425,7 +425,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                     <button
                       key={amount}
                       onClick={() => setPrefs({ ...prefs, budget: amount })}
-                      className="text-xs bg-stone-900 hover:bg-stone-800 border border-stone-800 px-3 py-1.5 rounded-lg text-amber-300 cursor-pointer"
+                      className="text-xs bg-white hover:bg-sand border border-line px-3 py-1.5 rounded-lg text-brand-dark cursor-pointer"
                     >
                       {amount} MDL
                     </button>
@@ -435,13 +435,13 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={() => setStep(2)}
-                    className="flex-1 py-2.5 bg-stone-800 text-stone-300 font-bold rounded-xl transition-all cursor-pointer text-xs"
+                    className="flex-1 py-2.5 bg-sand hover:bg-line text-ink font-bold rounded-xl transition-all cursor-pointer text-xs"
                   >
                     Înapoi
                   </button>
                   <button
                     onClick={() => setStep(4)}
-                    className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md"
+                    className="flex-1 py-2.5 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md"
                   >
                     Înainte ➔
                   </button>
@@ -453,10 +453,10 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
             {step === 4 && (
               <div className="space-y-4 my-auto">
                 <div className="text-center">
-                  <h3 className="text-amber-100 font-semibold text-sm font-serif flex items-center justify-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-amber-500" /> Selectează Alergiile Tale
+                  <h3 className="text-ink font-semibold text-sm font-serif flex items-center justify-center gap-1.5">
+                    <AlertTriangle className="w-4 h-4 text-brand" /> Selectează Alergiile Tale
                   </h3>
-                  <p className="text-[11px] text-stone-400 mt-1">
+                  <p className="text-[11px] text-muted mt-1">
                     Selectează alergenii de transmis către API:
                   </p>
                 </div>
@@ -471,11 +471,11 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                         onClick={() => toggleAllergy(alg)}
                         className={`py-2 px-2 text-[11px] font-bold rounded-xl border capitalize transition-all cursor-pointer flex items-center justify-center gap-1 ${
                           isSelected
-                            ? 'bg-rose-950/60 border-rose-600 text-rose-300 shadow-md'
-                            : 'bg-stone-900 border-stone-800 text-stone-400 hover:border-stone-700'
+                            ? 'bg-rose-50 border-rose-400 text-rose-700 shadow-sm'
+                            : 'bg-white border-line text-muted hover:border-brand/40'
                         }`}
                       >
-                        {isSelected && <Check className="w-3 h-3 text-rose-400 shrink-0" />}
+                        {isSelected && <Check className="w-3 h-3 text-rose-600 shrink-0" />}
                         {alg}
                       </button>
                     );
@@ -489,12 +489,12 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                     value={customAllergyInput}
                     onChange={(e) => setCustomAllergyInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddCustomAllergy()}
-                    className="flex-1 bg-stone-900 border border-stone-800 rounded-xl px-3 py-2 text-xs text-stone-100 placeholder-stone-600 focus:outline-none focus:border-amber-500"
+                    className="flex-1 bg-white border border-line rounded-xl px-3 py-2 text-xs text-ink placeholder-muted/60 focus:outline-none focus:border-brand"
                   />
                   <button
                     type="button"
                     onClick={handleAddCustomAllergy}
-                    className="bg-stone-800 hover:bg-stone-700 text-amber-400 px-3 py-2 rounded-xl text-xs font-bold border border-stone-700 cursor-pointer"
+                    className="bg-sand hover:bg-line text-brand px-3 py-2 rounded-xl text-xs font-bold border border-line cursor-pointer"
                   >
                     Adaugă
                   </button>
@@ -502,12 +502,12 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
                 {prefs.allergies.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    <span className="text-[10px] text-stone-400 font-semibold block w-full">Alergii selectate:</span>
+                    <span className="text-[10px] text-muted font-semibold block w-full">Alergii selectate:</span>
                     {prefs.allergies.map((alg) => (
                       <span
                         key={alg}
                         onClick={() => toggleAllergy(alg)}
-                        className="bg-rose-950/40 border border-rose-700/50 text-rose-300 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 cursor-pointer hover:line-through"
+                        className="bg-rose-50 border border-rose-200 text-rose-700 text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 cursor-pointer hover:line-through"
                       >
                         {alg} <X className="w-2.5 h-2.5" />
                       </span>
@@ -519,18 +519,18 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                   <button
                     onClick={() => setStep(3)}
                     disabled={loading}
-                    className="flex-1 py-2.5 bg-stone-800 text-stone-300 font-bold rounded-xl transition-all cursor-pointer text-xs"
+                    className="flex-1 py-2.5 bg-sand hover:bg-line text-ink font-bold rounded-xl transition-all cursor-pointer text-xs"
                   >
                     Înapoi
                   </button>
                   <button
                     onClick={submitPreferencesToBackend}
                     disabled={loading}
-                    className="flex-1 py-2.5 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md flex items-center justify-center gap-1.5"
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin text-stone-950" /> Trimitere...
+                        <Loader2 className="w-4 h-4 animate-spin text-white" /> Trimitere...
                       </>
                     ) : (
                       <>
@@ -546,25 +546,25 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
             {step === 5 && (
               <div className="space-y-3 text-left">
                 <div className="flex justify-between items-center mb-1">
-                  <h4 className="text-amber-100 font-bold text-xs font-serif">
+                  <h4 className="text-ink font-bold text-xs font-serif">
                     Meniu Recomandat {totalCost !== null && `(${totalCost.toFixed(2)} MDL)`}:
                   </h4>
                   <button
                     onClick={handleReset}
-                    className="text-[11px] text-stone-400 hover:text-amber-400 flex items-center gap-1 transition-colors cursor-pointer"
+                    className="text-[11px] text-muted hover:text-brand flex items-center gap-1 transition-colors cursor-pointer"
                   >
                     <RefreshCw className="w-3 h-3" /> Resetează
                   </button>
                 </div>
 
                 {aiReasoning && (
-                  <div className="bg-amber-950/30 border border-amber-800/40 p-2.5 rounded-xl text-stone-300 text-[11px] leading-relaxed font-sans">
+                  <div className="bg-brand-soft border border-brand/20 p-2.5 rounded-xl text-ink text-[11px] leading-relaxed font-sans">
                     💡 <span className="italic">{aiReasoning}</span>
                   </div>
                 )}
 
                 {recommendations.length === 0 ? (
-                  <p className="text-stone-400 text-xs text-center py-6 font-sans">
+                  <p className="text-muted text-xs text-center py-6 font-sans">
                     Nu s-au găsit preparate conform răspunsului primit de la server.
                   </p>
                 ) : (
@@ -574,7 +574,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                       return (
                         <div
                           key={item.id}
-                          className="bg-stone-900 border border-amber-900/30 p-3 rounded-xl flex flex-col gap-2"
+                          className="bg-white border border-line p-3 rounded-xl flex flex-col gap-2"
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-3">
@@ -582,12 +582,12 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                                 <img
                                   src={item.image}
                                   alt={item.title}
-                                  className="w-12 h-12 object-cover rounded-lg border border-amber-900/20 shrink-0"
+                                  className="w-12 h-12 object-cover rounded-lg border border-line shrink-0"
                                 />
                               )}
                               <div>
-                                <h5 className="font-semibold text-amber-100 text-xs font-serif">{item.title}</h5>
-                                <span className="text-amber-400 font-bold text-xs">{item.price} MDL</span>
+                                <h5 className="font-semibold text-ink text-xs font-serif">{item.title}</h5>
+                                <span className="text-brand font-bold text-xs">{item.price} MDL</span>
                               </div>
                             </div>
 
@@ -596,8 +596,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                               disabled={isAdded}
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
                                 isAdded
-                                  ? 'bg-stone-800 text-stone-500'
-                                  : 'bg-amber-600 hover:bg-amber-500 text-stone-950'
+                                  ? 'bg-sand text-muted'
+                                  : 'bg-brand hover:bg-brand-dark text-white'
                               }`}
                             >
                               {isAdded ? (
@@ -611,7 +611,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                           </div>
 
                           {item.description && (
-                            <p className="text-[11px] text-stone-400 italic border-t border-stone-800/60 pt-1.5 mt-0.5">
+                            <p className="text-[11px] text-muted italic border-t border-line pt-1.5 mt-0.5">
                               {item.description}
                             </p>
                           )}
