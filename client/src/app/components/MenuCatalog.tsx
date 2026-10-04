@@ -8,7 +8,9 @@ import {
   User,
   Loader2,
   Filter,
-  ShieldCheck,
+  UserPlus,
+  X,
+  ChevronDown,
 } from "lucide-react";
 
 interface Props {
@@ -43,7 +45,17 @@ export const MenuCatalog: React.FC<Props> = ({ onAddToCart }) => {
   const [orderType, setOrderType] = useState<"individual" | "group">(
     "individual",
   );
-  const [personName, setPersonName] = useState("");
+
+  // Stare pentru membri grupului
+  const [groupMembers, setGroupMembers] = useState<string[]>([
+    "Alexandru",
+    "Ion",
+    "Elena",
+  ]);
+  const [selectedPerson, setSelectedPerson] = useState<string>("Alexandru");
+  const [newPersonInput, setNewPersonInput] = useState("");
+  const [showAddPersonInput, setShowAddPersonInput] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
     const loadMenu = async () => {
@@ -56,16 +68,27 @@ export const MenuCatalog: React.FC<Props> = ({ onAddToCart }) => {
     loadMenu();
   }, []);
 
+  const handleAddPerson = () => {
+    if (newPersonInput.trim()) {
+      const name = newPersonInput.trim();
+      if (!groupMembers.includes(name)) {
+        setGroupMembers((prev) => [...prev, name]);
+      }
+      setSelectedPerson(name);
+      setNewPersonInput("");
+      setShowAddPersonInput(false);
+    }
+  };
+
   const handleConfirmAdd = () => {
     if (selectedItem) {
-      const finalName =
-        orderType === "group" && personName.trim()
-          ? personName
-          : MOCK_USER.name;
+      const finalName = orderType === "group" ? selectedPerson : MOCK_USER.name;
+
       onAddToCart(selectedItem, chefNote, orderType, finalName);
       setSelectedItem(null);
       setChefNote("");
-      setPersonName("");
+      setShowAddPersonInput(false);
+      setNewPersonInput("");
     }
   };
 
@@ -140,22 +163,6 @@ export const MenuCatalog: React.FC<Props> = ({ onAddToCart }) => {
             </button>
           ))}
         </div>
-
-        <button
-          onClick={() => setSafeOnlyFilter(!safeOnlyFilter)}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer shrink-0 border ${
-            safeOnlyFilter
-              ? "bg-emerald-600 text-white border-emerald-500 shadow-md"
-              : "bg-[#FAF7F2] border-[#E5DFD3] text-stone-700 hover:border-emerald-600/50"
-          }`}
-        >
-          <ShieldCheck
-            className={`w-4 h-4 ${
-              safeOnlyFilter ? "text-white" : "text-emerald-600"
-            }`}
-          />
-          <span>Doar Fără Alergenii Mei</span>
-        </button>
       </div>
 
       {loading ? (
@@ -294,18 +301,110 @@ export const MenuCatalog: React.FC<Props> = ({ onAddToCart }) => {
               </button>
             </div>
 
+            {/* Selector Persoană din Grup cu Custom UI (fără element nativ select) */}
             {orderType === "group" && (
-              <div className="mb-4">
-                <label className="text-xs font-semibold text-stone-400 uppercase tracking-wider block mb-2">
-                  Persoana care comandă
-                </label>
-                <input
-                  type="text"
-                  placeholder="Nume (ex: Alexandru, Maria...)"
-                  value={personName}
-                  onChange={(e) => setPersonName(e.target.value)}
-                  className="w-full bg-white border border-[#E5DFD3] rounded-xl p-3 text-sm text-stone-800 focus:outline-none focus:border-[#E04F26]"
-                />
+              <div className="mb-5 animate-in fade-in duration-150 relative">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-semibold text-stone-400 uppercase tracking-wider block">
+                    Cine comandă acest preparat?
+                  </label>
+                  {!showAddPersonInput && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddPersonInput(true);
+                        setIsDropdownOpen(false);
+                      }}
+                      className="text-xs text-[#E04F26] font-bold hover:text-[#c9421d] flex items-center gap-1 cursor-pointer transition-colors"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" /> Adaugă persoană
+                    </button>
+                  )}
+                </div>
+
+                {!showAddPersonInput ? (
+                  <div className="relative">
+                    {/* Trigger Buton */}
+                    <button
+                      type="button"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="w-full bg-white border border-[#E04F26] rounded-2xl py-3 px-4 text-sm font-bold text-stone-900 shadow-sm flex items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#E04F26]/20 transition-all"
+                    >
+                      <span>{selectedPerson}</span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-[#E04F26] transition-transform duration-200 ${
+                          isDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {/* Meniu Derulant Personalizat */}
+                    {isDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-[#E5DFD3] rounded-2xl shadow-xl z-50 overflow-hidden py-1 animate-in fade-in zoom-in-95 duration-100 max-h-48 overflow-y-auto">
+                        {groupMembers.map((member) => {
+                          const isSelected = selectedPerson === member;
+                          return (
+                            <button
+                              key={member}
+                              type="button"
+                              onClick={() => {
+                                setSelectedPerson(member);
+                                setIsDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-4 py-2.5 text-sm font-semibold transition-colors cursor-pointer flex items-center justify-between ${
+                                isSelected
+                                  ? "bg-[#E04F26]/10 text-[#E04F26]"
+                                  : "text-stone-800 hover:bg-[#FAF7F2]"
+                              }`}
+                            >
+                              <span>{member}</span>
+                              {isSelected && (
+                                <span className="w-2 h-2 rounded-full bg-[#E04F26]"></span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        placeholder="Nume nou (ex: Daniel)"
+                        value={newPersonInput}
+                        onChange={(e) => setNewPersonInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            handleAddPerson();
+                          }
+                        }}
+                        autoFocus
+                        className="w-full bg-white border border-[#E5DFD3] rounded-2xl py-2.5 px-3.5 text-sm text-stone-800 font-medium placeholder-stone-400 focus:outline-none focus:border-[#E04F26] focus:ring-2 focus:ring-[#E04F26]/10 shadow-sm"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddPerson}
+                      className="bg-[#E04F26] hover:bg-[#c9421d] text-white px-4 py-2.5 rounded-2xl text-xs font-bold transition-all shadow-sm cursor-pointer"
+                    >
+                      OK
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowAddPersonInput(false);
+                        setNewPersonInput("");
+                      }}
+                      className="p-2.5 bg-[#EAE4D9] hover:bg-[#DCD3C1] text-stone-600 rounded-2xl transition-all cursor-pointer border border-[#DCD3C1]"
+                      title="Anulează adăugarea"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -326,7 +425,8 @@ export const MenuCatalog: React.FC<Props> = ({ onAddToCart }) => {
                 onClick={() => {
                   setSelectedItem(null);
                   setChefNote("");
-                  setPersonName("");
+                  setShowAddPersonInput(false);
+                  setNewPersonInput("");
                 }}
                 className="flex-1 py-3 bg-[#EAE4D9] hover:bg-[#E0D8C9] text-stone-800 font-medium rounded-2xl transition-colors text-sm cursor-pointer border border-[#DCD3C1]"
               >

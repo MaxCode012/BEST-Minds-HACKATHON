@@ -169,7 +169,7 @@ export const AllergyQRModal: React.FC<Props> = ({
               <CheckCircle2 className="w-4 h-4" /> Salvat în Baza de Date
             </>
           ) : (
-            "Salvează Profilul (POST C#)"
+            "Salvează Profilul"
           )}
         </button>
 
