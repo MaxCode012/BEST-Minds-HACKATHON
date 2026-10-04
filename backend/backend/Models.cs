@@ -34,3 +34,18 @@ public record AIRecommendationResult(
     [property: JsonPropertyName("remaining_budget")] decimal? RemainingBudget,
     [property: JsonPropertyName("reasoning")] string Reasoning
 );
+
+public record SaveUserAllergiesRequest(
+    [property: JsonPropertyName("userKey")] string UserKey,
+    [property: JsonPropertyName("allergens")] List<string>? Allergens,
+    [property: JsonPropertyName("preferences")] string? Preferences
+);
+
+public record UserRecommendationRequest(
+    [property: JsonPropertyName("user_id")] string? UserId,
+    [property: JsonPropertyName("budget")] decimal? Budget,
+    [property: JsonPropertyName("allergies")] List<string>? Allergies,
+    [property: JsonPropertyName("wants_drink")] bool WantsDrink,
+    [property: JsonPropertyName("wants_dessert")] bool WantsDessert,
+    [property: JsonPropertyName("preferences")] List<string>? Preferences
+);
