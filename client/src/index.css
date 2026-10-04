@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
 /*
@@ -10,15 +10,15 @@
   --font-serif: "Playfair Display", Georgia, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
 
-  --color-cream: #fffaf5;        /* page background */
-  --color-sand: #f8ede4;         /* subtle fills: toggle bar, secondary buttons */
-  --color-line: #eddccd;         /* borders and dividers */
-  --color-ink: #2a1a17;          /* headings and main text */
-  --color-muted: #7b665c;        /* secondary text */
+  --color-cream: #fffaf5; /* page background */
+  --color-sand: #f8ede4; /* subtle fills: toggle bar, secondary buttons */
+  --color-line: #eddccd; /* borders and dividers */
+  --color-ink: #2a1a17; /* headings and main text */
+  --color-muted: #7b665c; /* secondary text */
 
-  --color-brand: #d63c1e;        /* tomato: primary buttons, prices, accents */
-  --color-brand-dark: #b02f15;   /* hover state and text on brand-soft */
-  --color-brand-soft: #fdebe4;   /* selected chips, tinted panels */
+  --color-brand: #d63c1e; /* tomato: primary buttons, prices, accents */
+  --color-brand-dark: #b02f15; /* hover state and text on brand-soft */
+  --color-brand-soft: #fdebe4; /* selected chips, tinted panels */
 }
 
 @layer base {
@@ -33,7 +33,11 @@
     min-height: 100vh;
   }
 
-  h1, h2, h3, h4, h5 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
     @apply font-serif;
   }
 }
@@ -43,7 +47,16 @@
   min-height: 100vh;
 }
 
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(214, 60, 30, 0.22); border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(214, 60, 30, 0.4); }
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(214, 60, 30, 0.22);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(214, 60, 30, 0.4);
+}

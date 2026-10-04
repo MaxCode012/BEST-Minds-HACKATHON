@@ -1,14 +1,29 @@
-import React, { useState } from 'react';
-import { Sparkles, X, Bot, Check, RefreshCw, Plus, DollarSign, AlertTriangle, Loader2, QrCode, User } from 'lucide-react';
-import { MOCK_USER, MenuItem } from '../data/mockData';
-import { QRScannerModal } from './QRScannerModal';
+import React, { useState } from "react";
+import {
+  Sparkles,
+  X,
+  Bot,
+  Check,
+  RefreshCw,
+  Plus,
+  DollarSign,
+  Utensils,
+  UtensilsCrossed,
+  AlertTriangle,
+  Loader2,
+  QrCode,
+  User,
+  Salad,
+} from "lucide-react";
+import { MOCK_USER, MenuItem } from "../data/mockData";
+import { QRScannerModal } from "./QRScannerModal";
 
 interface Preferences {
-  hungerLevel: 'light' | 'hearty';
-  dietType: 'all' | 'vegetarian' | 'vegan';
+  hungerLevel: "light" | "hearty";
+  dietType: "all" | "vegetarian" | "vegan";
   drinks: boolean | null;
   dessert: boolean | null;
-  budget: number | '';
+  budget: number | "";
   allergies: string[];
 }
 
@@ -16,34 +31,37 @@ interface Props {
   onAddToCart?: (
     item: MenuItem,
     chefNote: string,
-    orderType: 'individual' | 'group',
-    userName: string
+    orderType: "individual" | "group",
+    userName: string,
   ) => void;
 }
 
-const COMMON_ALLERGIES = ['lactoză', 'alune', 'gluten', 'ouă', 'pește', 'soia'];
+const COMMON_ALLERGIES = ["lactoză", "alune", "gluten", "ouă", "pește", "soia"];
 
 export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [addedItemIds, setAddedItemIds] = useState<number[]>([]);
-  const [customAllergyInput, setCustomAllergyInput] = useState('');
+  const [customAllergyInput, setCustomAllergyInput] = useState("");
 
   const [isScanningCamera, setIsScanningCamera] = useState(false);
-  const [scannedUser, setScannedUser] = useState<{ id: string; name: string } | null>(null);
+  const [scannedUser, setScannedUser] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   const [prefs, setPrefs] = useState<Preferences>({
-    hungerLevel: 'hearty',
-    dietType: 'all',
+    hungerLevel: "hearty",
+    dietType: "all",
     drinks: null,
     dessert: null,
-    budget: '',
+    budget: "",
     allergies: [...MOCK_USER.allergies],
   });
 
   const [recommendations, setRecommendations] = useState<MenuItem[]>([]);
-  const [aiReasoning, setAiReasoning] = useState<string>('');
+  const [aiReasoning, setAiReasoning] = useState<string>("");
   const [totalCost, setTotalCost] = useState<number | null>(null);
 
   // Directly fetch profile using the raw scanned text ID
@@ -54,14 +72,17 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://172.30.69.205:5000/api/users/${cleanId}`);
+      const response = await fetch(
+        `http://172.30.69.205:5000/api/users/${cleanId}`,
+      );
 
       if (response.ok) {
         const userData = await response.json();
-        console.log('[PLAIN TEXT QR SUCCESS]: Profil găsit în C#:', userData);
+        console.log("[PLAIN TEXT QR SUCCESS]: Profil găsit în C#:", userData);
 
-        const loadedAllergies: string[] = userData.allergies ?? userData.Allergies ?? [];
-        const userName: string = userData.name ?? userData.Name ?? 'Alex';
+        const loadedAllergies: string[] =
+          userData.allergies ?? userData.Allergies ?? [];
+        const userName: string = userData.name ?? userData.Name ?? "Alex";
 
         setPrefs((prev) => ({
           ...prev,
@@ -74,8 +95,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
         alert(`Utilizatorul cu ID '${cleanId}' nu există în baza de date.`);
       }
     } catch (error) {
-      console.error('Eroare la conectarea cu serverul C#:', error);
-      alert('Eroare la conectarea cu serverul.');
+      console.error("Eroare la conectarea cu serverul C#:", error);
+      alert("Eroare la conectarea cu serverul.");
     } finally {
       setLoading(false);
     }
@@ -84,7 +105,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
   // Triggered directly when the camera scans the plain text QR code
   const handleCameraQrSuccess = (decodedText: string) => {
     setIsScanningCamera(false);
-    console.log('[CAMERA READ RAW STRING]:', decodedText);
+    console.log("[CAMERA READ RAW STRING]:", decodedText);
     loadUserProfileFromBackend(decodedText);
   };
 
@@ -92,18 +113,18 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
     setStep(1);
     setLoading(false);
     setPrefs({
-      hungerLevel: 'hearty',
-      dietType: 'all',
+      hungerLevel: "hearty",
+      dietType: "all",
       drinks: null,
       dessert: null,
-      budget: '',
+      budget: "",
       allergies: [...MOCK_USER.allergies],
     });
     setRecommendations([]);
-    setAiReasoning('');
+    setAiReasoning("");
     setTotalCost(null);
     setAddedItemIds([]);
-    setCustomAllergyInput('');
+    setCustomAllergyInput("");
     setScannedUser(null);
   };
 
@@ -126,7 +147,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
         ...prev,
         allergies: [...prev.allergies, trimmed],
       }));
-      setCustomAllergyInput('');
+      setCustomAllergyInput("");
     }
   };
 
@@ -134,64 +155,89 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
     setLoading(true);
 
     const payload = {
-      user_id: scannedUser?.id || 'GUEST',
-      budget: typeof prefs.budget === 'number' ? prefs.budget : null,
-      allergies: prefs.allergies && prefs.allergies.length > 0 ? prefs.allergies : [],
+      user_id: scannedUser?.id || "GUEST",
+      budget: typeof prefs.budget === "number" ? prefs.budget : null,
+      allergies:
+        prefs.allergies && prefs.allergies.length > 0 ? prefs.allergies : [],
       wants_drink: Boolean(prefs.drinks),
       wants_dessert: Boolean(prefs.dessert),
       preferences: [
-        prefs.hungerLevel === 'hearty' ? 'masă copioasă' : 'gustare ușoară',
-        prefs.dietType !== 'all' ? prefs.dietType : null,
+        prefs.hungerLevel === "hearty" ? "masă copioasă" : "gustare ușoară",
+        prefs.dietType !== "all" ? prefs.dietType : null,
       ].filter(Boolean) as string[],
     };
 
     try {
-      const response = await fetch('http://172.30.69.205:5000/api/recommendations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        "http://172.30.69.205:5000/api/recommendations",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
 
       if (response.ok) {
         const data = await response.json();
 
-        setAiReasoning(data.reasoning ?? data.Reasoning ?? '');
+        setAiReasoning(data.reasoning ?? data.Reasoning ?? "");
         setTotalCost(data.total_cost ?? data.TotalCost ?? null);
 
-        const rawItems = data.selected_items ?? data.SelectedItems ?? data.items ?? (Array.isArray(data) ? data : []);
+        const rawItems =
+          data.selected_items ??
+          data.SelectedItems ??
+          data.items ??
+          (Array.isArray(data) ? data : []);
 
-        const normalizedItems: MenuItem[] = rawItems.map((item: any, index: number) => {
-          let parsedAllergens: string[] = [];
-          const rawAllergens = item.allergens ?? item.Allergens;
+        const normalizedItems: MenuItem[] = rawItems.map(
+          (item: any, index: number) => {
+            let parsedAllergens: string[] = [];
+            const rawAllergens = item.allergens ?? item.Allergens;
 
-          if (Array.isArray(rawAllergens)) {
-            parsedAllergens = rawAllergens;
-          } else if (typeof rawAllergens === 'string' && rawAllergens.trim().length > 0) {
-            parsedAllergens = rawAllergens.split(',').map((a: string) => a.trim());
-          }
+            if (Array.isArray(rawAllergens)) {
+              parsedAllergens = rawAllergens;
+            } else if (
+              typeof rawAllergens === "string" &&
+              rawAllergens.trim().length > 0
+            ) {
+              parsedAllergens = rawAllergens
+                .split(",")
+                .map((a: string) => a.trim());
+            }
 
-          return {
-            id: Number(item.id ?? item.Id ?? index + 1),
-            title: item.name ?? item.Name ?? item.title ?? item.Title ?? 'Preparat Recomandat',
-            description: item.reason ?? item.Reason ?? item.description ?? item.Description ?? '',
-            price: Number(item.price ?? item.Price ?? 0),
-            category: item.category ?? item.Category ?? 'General',
-            image:
-              item.image ??
-              item.Image ??
-              item.image_url ??
-              item.imageUrl ??
-              'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
-            allergens: parsedAllergens,
-          };
-        });
+            return {
+              id: Number(item.id ?? item.Id ?? index + 1),
+              title:
+                item.name ??
+                item.Name ??
+                item.title ??
+                item.Title ??
+                "Preparat Recomandat",
+              description:
+                item.reason ??
+                item.Reason ??
+                item.description ??
+                item.Description ??
+                "",
+              price: Number(item.price ?? item.Price ?? 0),
+              category: item.category ?? item.Category ?? "General",
+              image:
+                item.image ??
+                item.Image ??
+                item.image_url ??
+                item.imageUrl ??
+                "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80",
+              allergens: parsedAllergens,
+            };
+          },
+        );
 
         setRecommendations(normalizedItems);
       } else {
         setRecommendations([]);
       }
     } catch (error) {
-      console.error('Eroare la trimiterea cererii către C#:', error);
+      console.error("Eroare la trimiterea cererii către C#:", error);
       setRecommendations([]);
     } finally {
       setLoading(false);
@@ -201,13 +247,18 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
   const handleAddDirectly = (item: MenuItem) => {
     if (onAddToCart) {
-      onAddToCart(item, 'Recomandat de Sommelier AI', 'individual', scannedUser?.name || MOCK_USER.name);
+      onAddToCart(
+        item,
+        "Recomandat de Sommelier AI",
+        "individual",
+        scannedUser?.name || MOCK_USER.name,
+      );
       setAddedItemIds((prev) => [...prev, item.id]);
     }
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-sans">
+    <div className="fixed bottom-6 right-6 z-30 font-sans">
       {/* Live Camera Scanner */}
       {isScanningCamera && (
         <QRScannerModal
@@ -237,9 +288,11 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                 <Bot className="w-5 h-5" />
               </div>
               <div>
-                <h4 className="font-bold text-ink text-sm font-serif">SmartResto AI</h4>
+                <h4 className="font-bold text-ink text-sm font-serif">
+                  SmartResto AI
+                </h4>
                 <p className="text-[11px] text-brand font-medium">
-                  {step <= 4 ? `Pasul ${step} din 4` : 'Meniu Recomandat'}
+                  {step <= 4 ? `Pasul ${step} din 4` : "Meniu Recomandat"}
                 </p>
               </div>
             </div>
@@ -268,9 +321,12 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
           {scannedUser && (
             <div className="bg-brand-soft border-b border-line px-4 py-1.5 flex items-center justify-between text-[11px]">
               <span className="text-brand-dark font-medium flex items-center gap-1.5">
-                <User className="w-3 h-3 text-brand" /> Profil: <strong>{scannedUser.name}</strong>
+                <User className="w-3 h-3 text-brand" /> Profil:{" "}
+                <strong>{scannedUser.name}</strong>
               </span>
-              <span className="text-muted text-[10px]">Alergii sincronizate</span>
+              <span className="text-muted text-[10px]">
+                Alergii sincronizate
+              </span>
             </div>
           )}
 
@@ -282,50 +338,64 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                 <h3 className="text-ink font-semibold text-sm text-center font-serif">
                   Cât de foame vă este și ce preferințe aveți? 🍽️
                 </h3>
-                
+
                 <div>
-                  <label className="text-[11px] text-muted font-semibold uppercase tracking-wider block mb-1.5">Mărime Masă:</label>
+                  <label className="text-[11px] text-muted font-semibold uppercase tracking-wider block mb-1.5">
+                    Mărime Masă:
+                  </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={() => setPrefs({ ...prefs, hungerLevel: 'light' })}
-                      className={`py-2.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
-                        prefs.hungerLevel === 'light'
-                          ? 'bg-brand-soft border-brand text-brand-dark'
-                          : 'bg-white border-line text-muted hover:border-brand/40'
+                      onClick={() =>
+                        setPrefs({ ...prefs, hungerLevel: "light" })
+                      }
+                      className={`py-2.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        prefs.hungerLevel === "light"
+                          ? "bg-[#E04F26]/10 border-[#E04F26] text-[#E04F26] font-bold"
+                          : "bg-[#FAF7F2] border-[#E5DFD3] text-stone-600 hover:border-[#E04F26]/40"
                       }`}
                     >
-                      🥗 Gustare Ușoară
+                      <Salad className="w-4 h-4 shrink-0" />
+                      <span>Gustare Ușoară</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => setPrefs({ ...prefs, hungerLevel: 'hearty' })}
-                      className={`py-2.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
-                        prefs.hungerLevel === 'hearty'
-                          ? 'bg-brand-soft border-brand text-brand-dark'
-                          : 'bg-white border-line text-muted hover:border-brand/40'
+                      onClick={() =>
+                        setPrefs({ ...prefs, hungerLevel: "hearty" })
+                      }
+                      className={`py-2.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                        prefs.hungerLevel === "hearty"
+                          ? "bg-[#E04F26]/10 border-[#E04F26] text-[#E04F26] font-bold"
+                          : "bg-[#FAF7F2] border-[#E5DFD3] text-stone-600 hover:border-[#E04F26]/40"
                       }`}
                     >
-                      🥩 Masă Copioasă
+                      {prefs.hungerLevel === "hearty" ? (
+                        <UtensilsCrossed className="w-4 h-4 shrink-0" />
+                      ) : (
+                        <Utensils className="w-4 h-4 shrink-0" />
+                      )}
+                      <span>Masă Copioasă</span>
                     </button>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-[11px] text-muted font-semibold uppercase tracking-wider block mb-1.5">Preferință Dietă:</label>
+                  <label className="text-[11px] text-muted font-semibold uppercase tracking-wider block mb-1.5">
+                    Preferință Dietă:
+                  </label>
                   <div className="grid grid-cols-3 gap-1.5">
-                    {(['all', 'vegetarian', 'vegan'] as const).map((d) => (
+                    {(["all", "vegetarian", "vegan"] as const).map((d) => (
                       <button
                         key={d}
                         type="button"
                         onClick={() => setPrefs({ ...prefs, dietType: d })}
                         className={`py-2 text-[11px] font-semibold rounded-xl border capitalize transition-all cursor-pointer ${
                           prefs.dietType === d
-                            ? 'bg-brand-soft border-brand text-brand-dark'
-                            : 'bg-white border-line text-muted hover:border-brand/40'
+                            ? "bg-brand-soft border-brand text-brand-dark"
+                            : "bg-white border-line text-muted hover:border-brand/40"
                         }`}
                       >
-                        {d === 'all' ? 'Toate' : d}
+                        {d === "all" ? "Toate" : d}
                       </button>
                     ))}
                   </div>
@@ -349,30 +419,38 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-line">
-                    <span className="text-xs text-ink font-medium">Include Băutură</span>
+                    <span className="text-xs text-ink font-medium">
+                      Include Băutură
+                    </span>
                     <button
-                      onClick={() => setPrefs({ ...prefs, drinks: !prefs.drinks })}
+                      onClick={() =>
+                        setPrefs({ ...prefs, drinks: !prefs.drinks })
+                      }
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         prefs.drinks
-                          ? 'bg-brand text-white'
-                          : 'bg-sand text-muted'
+                          ? "bg-brand text-white"
+                          : "bg-sand text-muted"
                       }`}
                     >
-                      {prefs.drinks ? 'DA' : 'NU'}
+                      {prefs.drinks ? "DA" : "NU"}
                     </button>
                   </div>
 
                   <div className="flex items-center justify-between bg-white p-3 rounded-xl border border-line">
-                    <span className="text-xs text-ink font-medium">Include Desert</span>
+                    <span className="text-xs text-ink font-medium">
+                      Include Desert
+                    </span>
                     <button
-                      onClick={() => setPrefs({ ...prefs, dessert: !prefs.dessert })}
+                      onClick={() =>
+                        setPrefs({ ...prefs, dessert: !prefs.dessert })
+                      }
                       className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                         prefs.dessert
-                          ? 'bg-brand text-white'
-                          : 'bg-sand text-muted'
+                          ? "bg-brand text-white"
+                          : "bg-sand text-muted"
                       }`}
                     >
-                      {prefs.dessert ? 'DA' : 'NU'}
+                      {prefs.dessert ? "DA" : "NU"}
                     </button>
                   </div>
                 </div>
@@ -397,7 +475,9 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
             {/* Step 3 */}
             {step === 3 && (
               <div className="space-y-4 text-center my-auto">
-                <h3 className="text-ink font-semibold text-sm font-serif">Care este bugetul maxim? 💵</h3>
+                <h3 className="text-ink font-semibold text-sm font-serif">
+                  Care este bugetul maxim? 💵
+                </h3>
 
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -410,7 +490,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                     onChange={(e) =>
                       setPrefs({
                         ...prefs,
-                        budget: e.target.value ? Number(e.target.value) : '',
+                        budget: e.target.value ? Number(e.target.value) : "",
                       })
                     }
                     className="w-full pl-9 pr-12 py-3 bg-white border border-line rounded-xl text-ink placeholder-muted/60 focus:outline-none focus:border-brand text-sm font-bold"
@@ -454,7 +534,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
               <div className="space-y-4 my-auto">
                 <div className="text-center">
                   <h3 className="text-ink font-semibold text-sm font-serif flex items-center justify-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-brand" /> Selectează Alergiile Tale
+                    <AlertTriangle className="w-4 h-4 text-brand" /> Selectează
+                    Alergiile Tale
                   </h3>
                   <p className="text-[11px] text-muted mt-1">
                     Selectează alergenii de transmis către API:
@@ -471,11 +552,13 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                         onClick={() => toggleAllergy(alg)}
                         className={`py-2 px-2 text-[11px] font-bold rounded-xl border capitalize transition-all cursor-pointer flex items-center justify-center gap-1 ${
                           isSelected
-                            ? 'bg-rose-50 border-rose-400 text-rose-700 shadow-sm'
-                            : 'bg-white border-line text-muted hover:border-brand/40'
+                            ? "bg-rose-50 border-rose-400 text-rose-700 shadow-sm"
+                            : "bg-white border-line text-muted hover:border-brand/40"
                         }`}
                       >
-                        {isSelected && <Check className="w-3 h-3 text-rose-600 shrink-0" />}
+                        {isSelected && (
+                          <Check className="w-3 h-3 text-rose-600 shrink-0" />
+                        )}
                         {alg}
                       </button>
                     );
@@ -488,7 +571,9 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                     placeholder="Alta (ex: susan...)"
                     value={customAllergyInput}
                     onChange={(e) => setCustomAllergyInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddCustomAllergy()}
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && handleAddCustomAllergy()
+                    }
                     className="flex-1 bg-white border border-line rounded-xl px-3 py-2 text-xs text-ink placeholder-muted/60 focus:outline-none focus:border-brand"
                   />
                   <button
@@ -502,7 +587,9 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
                 {prefs.allergies.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    <span className="text-[10px] text-muted font-semibold block w-full">Alergii selectate:</span>
+                    <span className="text-[10px] text-muted font-semibold block w-full">
+                      Alergii selectate:
+                    </span>
                     {prefs.allergies.map((alg) => (
                       <span
                         key={alg}
@@ -530,7 +617,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                   >
                     {loading ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin text-white" /> Trimitere...
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />{" "}
+                        Trimitere...
                       </>
                     ) : (
                       <>
@@ -547,7 +635,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
               <div className="space-y-3 text-left">
                 <div className="flex justify-between items-center mb-1">
                   <h4 className="text-ink font-bold text-xs font-serif">
-                    Meniu Recomandat {totalCost !== null && `(${totalCost.toFixed(2)} MDL)`}:
+                    Meniu Recomandat{" "}
+                    {totalCost !== null && `(${totalCost.toFixed(2)} MDL)`}:
                   </h4>
                   <button
                     onClick={handleReset}
@@ -565,7 +654,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
                 {recommendations.length === 0 ? (
                   <p className="text-muted text-xs text-center py-6 font-sans">
-                    Nu s-au găsit preparate conform răspunsului primit de la server.
+                    Nu s-au găsit preparate conform răspunsului primit de la
+                    server.
                   </p>
                 ) : (
                   <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
@@ -586,8 +676,12 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                                 />
                               )}
                               <div>
-                                <h5 className="font-semibold text-ink text-xs font-serif">{item.title}</h5>
-                                <span className="text-brand font-bold text-xs">{item.price} MDL</span>
+                                <h5 className="font-semibold text-ink text-xs font-serif">
+                                  {item.title}
+                                </h5>
+                                <span className="text-brand font-bold text-xs">
+                                  {item.price} MDL
+                                </span>
                               </div>
                             </div>
 
@@ -596,12 +690,12 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                               disabled={isAdded}
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
                                 isAdded
-                                  ? 'bg-sand text-muted'
-                                  : 'bg-brand hover:bg-brand-dark text-white'
+                                  ? "bg-sand text-muted"
+                                  : "bg-brand hover:bg-brand-dark text-white"
                               }`}
                             >
                               {isAdded ? (
-                                'Adăugat'
+                                "Adăugat"
                               ) : (
                                 <>
                                   <Plus className="w-3.5 h-3.5" /> Adaugă
