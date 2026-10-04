@@ -51,4 +51,35 @@ public class UserRepository
 
         return null;
     }
+    public async Task SaveUserProfileAsync(string userKey, List<string> allergens, string preferences)
+    {
+        using NpgsqlConnection connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        // Format "MAXIM_SEREMET" into "MAXIM SEREMET" for display
+        string formattedName = userKey.Replace("_", " ");
+
+        string[] allergiesArray = allergens != null ? allergens.ToArray() : new string[0];
+
+        // Convert single preferences text into an array for the PostgreSQL TEXT[] column
+        string[] preferencesArray = string.IsNullOrWhiteSpace(preferences)
+            ? new string[0]
+            : new string[] { preferences.Trim() };
+
+        string sql = @"
+        INSERT INTO users (id, name, allergies, preferences)
+        VALUES (@id, @name, @allergies, @preferences)
+        ON CONFLICT (id) DO UPDATE
+        SET name = EXCLUDED.name,
+            allergies = EXCLUDED.allergies,
+            preferences = EXCLUDED.preferences;";
+
+        using NpgsqlCommand command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("@id", userKey);
+        command.Parameters.AddWithValue("@name", formattedName);
+        command.Parameters.AddWithValue("@allergies", allergiesArray);
+        command.Parameters.AddWithValue("@preferences", preferencesArray);
+
+        await command.ExecuteNonQueryAsync();
+    }
 }

@@ -94,6 +94,32 @@ class Program
             }
         });
 
+        app.MapPost("/api/allergies", async (SaveUserAllergiesRequest request) =>
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.UserKey))
+                {
+                    return Results.BadRequest(new { error = "Cheia utilizatorului este obligatorie." });
+                }
+
+                UserRepository userRepo = new UserRepository(dbConnectionString);
+                await userRepo.SaveUserProfileAsync(
+                    request.UserKey,
+                    request.Allergens ?? new List<string>(),
+                    request.Preferences ?? ""
+                );
+
+                Console.WriteLine($"[PROFIL SALVAT]: Salvat/actualizat user: {request.UserKey} cu {request.Allergens?.Count ?? 0} alergii.");
+                return Results.Ok(new { message = "Profilul a fost salvat cu succes!" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[EROARE SALVARE ALERGII]: {ex.Message}");
+                return Results.Problem($"Eroare la salvarea profilului: {ex.Message}");
+            }
+        });
+
         // POST /api/recommendations (Reuses injected ChatClient)
         app.MapPost("/api/recommendations", async (UserRecommendationRequest request, ChatClient client) =>
         {
@@ -114,7 +140,16 @@ class Program
             Console.WriteLine($" - Alergii:          {allergiesText}");
             Console.WriteLine($" - Preferințe:       {preferencesText}");
             Console.WriteLine($" - Include Băutură:  {request.WantsDrink}");
-            Console.WriteLine($" - Include Desert:   {request.WantsDessert}"); Console.WriteLine("=================================================="); MenuRepository repo = new MenuRepository(dbConnectionString); List<MenuItem> meniuComplet = await repo.GetMenuItemsAsync(); if (meniuComplet.Count == 0) { Console.WriteLine("[EROARE]: Nu s-au găsit preparate în baza de date."); return Results.BadRequest(new { error = "Nu s-au găsit preparate în baza de date." }); }                  // ⚡ Pre-filter allergens in C# before calling AI
+            Console.WriteLine($" - Include Desert:   {request.WantsDessert}"); 
+            Console.WriteLine("=================================================="); 
+            MenuRepository repo = new MenuRepository(dbConnectionString); 
+            List<MenuItem> meniuComplet = await repo.GetMenuItemsAsync(); 
+            if (meniuComplet.Count == 0) 
+                { 
+                    Console.WriteLine("[EROARE]: Nu s-au găsit preparate în baza de date."); 
+                    return Results.BadRequest(new { error = "Nu s-au găsit preparate în baza de date." });
+                }                  // ⚡ Pre-filter allergens in C# before calling AI
+
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       List<MenuItem> safeMenu = meniuComplet;                 if (request.Allergies != null && request.Allergies.Count > 0)                 {                     safeMenu = meniuComplet.Where((MenuItem item) =>                     {                         string itemAllergens = item.Allergens?.ToLower() ?? "";                         return !request.Allergies.Any((string userAllergy) =>                             itemAllergens.Contains(userAllergy.ToLower().Trim()));                     }).ToList();                 }                  // ⚡ Strip heavy fields (images/descriptions) to minimize AI token usage
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               IEnumerable<object> lightweightMenu = safeMenu.Select((MenuItem m) => new                 {                     id = m.Id,                     name = m.Name,                     category = m.Category,                     price = m.Price,                     allergens = m.Allergens                 });                  string menuJson = JsonSerializer.Serialize(lightweightMenu);
                 string prompt = $$"""
@@ -231,11 +266,3 @@ app.Run("http://0.0.0.0:5000");
 }
 
 // Request Payload DTO received from website (includes optional user_id)
-public record UserRecommendationRequest(
-    [property: JsonPropertyName("user_id")] string? UserId,
-    [property: JsonPropertyName("budget")] decimal? Budget,
-    [property: JsonPropertyName("allergies")] List<string>? Allergies,
-    [property: JsonPropertyName("wants_drink")] bool WantsDrink,
-    [property: JsonPropertyName("wants_dessert")] bool WantsDessert,
-    [property: JsonPropertyName("preferences")] List<string>? Preferences
-);
