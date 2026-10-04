@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Sparkles,
   X,
@@ -45,6 +46,8 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
   const [addedItemIds, setAddedItemIds] = useState<number[]>([]);
   const [customAllergyInput, setCustomAllergyInput] = useState("");
 
+  const [searchParams] = useSearchParams();
+
   const [isScanningCamera, setIsScanningCamera] = useState(false);
   const [scannedUser, setScannedUser] = useState<{
     id: string;
@@ -64,7 +67,18 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
   const [aiReasoning, setAiReasoning] = useState<string>("");
   const [totalCost, setTotalCost] = useState<number | null>(null);
 
-  // Directly fetch profile using the raw scanned text ID
+  // Auto-deschidere la Pasul 1 dacă utilizatorul accesează link-ul generat de QR code
+  useEffect(() => {
+    if (
+      searchParams.get("startAi") === "true" ||
+      searchParams.get("qr") === "true"
+    ) {
+      setStep(1);
+      setIsOpen(true);
+    }
+  }, [searchParams]);
+
+  // Descărcare profil din C# pe baza ID-ului din QR code
   const loadUserProfileFromBackend = async (userId: string) => {
     const cleanId = userId.trim();
     if (!cleanId) return;
@@ -90,6 +104,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
         }));
 
         setScannedUser({ id: cleanId, name: userName });
+        setStep(1); // Ne asigurăm că ajunge la primul pas
         setIsOpen(true);
       } else {
         alert(`Utilizatorul cu ID '${cleanId}' nu există în baza de date.`);
@@ -102,7 +117,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
     }
   };
 
-  // Triggered directly when the camera scans the plain text QR code
+  // Apelat când camera citește un cod QR
   const handleCameraQrSuccess = (decodedText: string) => {
     setIsScanningCamera(false);
     console.log("[CAMERA READ RAW STRING]:", decodedText);
@@ -270,7 +285,10 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
       {/* Floating Button */}
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            setStep(1);
+            setIsOpen(true);
+          }}
           className="flex items-center gap-2.5 bg-brand hover:bg-brand-dark text-white font-bold px-5 py-3.5 rounded-full shadow-xl shadow-brand/30 transition-all hover:scale-105 cursor-pointer border border-brand/30"
         >
           <Sparkles className="w-5 h-5 text-white animate-pulse" />
@@ -334,7 +352,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
           <div className="flex-1 p-5 overflow-y-auto bg-cream flex flex-col justify-start">
             {/* Step 1 */}
             {step === 1 && (
-              <div className="space-y-4 my-auto">
+              <div className="space-y-4 my-auto animate-in fade-in duration-200">
                 <h3 className="text-ink font-semibold text-sm text-center font-serif">
                   Cât de foame vă este și ce preferințe aveți? 🍽️
                 </h3>
@@ -391,7 +409,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                         onClick={() => setPrefs({ ...prefs, dietType: d })}
                         className={`py-2 text-[11px] font-semibold rounded-xl border capitalize transition-all cursor-pointer ${
                           prefs.dietType === d
-                            ? "bg-brand-soft border-brand text-brand-dark"
+                            ? "bg-brand-soft border-brand text-brand-dark font-bold"
                             : "bg-white border-line text-muted hover:border-brand/40"
                         }`}
                       >
@@ -402,6 +420,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                 </div>
 
                 <button
+                  type="button"
                   onClick={() => setStep(2)}
                   className="w-full mt-2 py-3 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md"
                 >
@@ -412,7 +431,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
             {/* Step 2 */}
             {step === 2 && (
-              <div className="space-y-4 text-center my-auto">
+              <div className="space-y-4 text-center my-auto animate-in fade-in duration-200">
                 <h3 className="text-ink font-semibold text-sm font-serif">
                   Doriți o băutură sau un desert? 🍷🍰
                 </h3>
@@ -423,6 +442,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                       Include Băutură
                     </span>
                     <button
+                      type="button"
                       onClick={() =>
                         setPrefs({ ...prefs, drinks: !prefs.drinks })
                       }
@@ -441,6 +461,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                       Include Desert
                     </span>
                     <button
+                      type="button"
                       onClick={() =>
                         setPrefs({ ...prefs, dessert: !prefs.dessert })
                       }
@@ -457,12 +478,14 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
                 <div className="flex gap-2">
                   <button
+                    type="button"
                     onClick={() => setStep(1)}
                     className="flex-1 py-2.5 bg-sand hover:bg-line text-ink font-bold rounded-xl transition-all cursor-pointer text-xs"
                   >
                     Înapoi
                   </button>
                   <button
+                    type="button"
                     onClick={() => setStep(3)}
                     className="flex-1 py-2.5 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md"
                   >
@@ -474,7 +497,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
             {/* Step 3 */}
             {step === 3 && (
-              <div className="space-y-4 text-center my-auto">
+              <div className="space-y-4 text-center my-auto animate-in fade-in duration-200">
                 <h3 className="text-ink font-semibold text-sm font-serif">
                   Care este bugetul maxim? 💵
                 </h3>
@@ -504,6 +527,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                   {[150, 300, 500].map((amount) => (
                     <button
                       key={amount}
+                      type="button"
                       onClick={() => setPrefs({ ...prefs, budget: amount })}
                       className="text-xs bg-white hover:bg-sand border border-line px-3 py-1.5 rounded-lg text-brand-dark cursor-pointer"
                     >
@@ -514,12 +538,14 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
                 <div className="flex gap-2 pt-2">
                   <button
+                    type="button"
                     onClick={() => setStep(2)}
                     className="flex-1 py-2.5 bg-sand hover:bg-line text-ink font-bold rounded-xl transition-all cursor-pointer text-xs"
                   >
                     Înapoi
                   </button>
                   <button
+                    type="button"
                     onClick={() => setStep(4)}
                     className="flex-1 py-2.5 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md"
                   >
@@ -531,7 +557,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
             {/* Step 4 */}
             {step === 4 && (
-              <div className="space-y-4 my-auto">
+              <div className="space-y-4 my-auto animate-in fade-in duration-200">
                 <div className="text-center">
                   <h3 className="text-ink font-semibold text-sm font-serif flex items-center justify-center gap-1.5">
                     <AlertTriangle className="w-4 h-4 text-brand" /> Selectează
@@ -604,6 +630,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
                 <div className="flex gap-2 pt-2">
                   <button
+                    type="button"
                     onClick={() => setStep(3)}
                     disabled={loading}
                     className="flex-1 py-2.5 bg-sand hover:bg-line text-ink font-bold rounded-xl transition-all cursor-pointer text-xs"
@@ -611,6 +638,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                     Înapoi
                   </button>
                   <button
+                    type="button"
                     onClick={submitPreferencesToBackend}
                     disabled={loading}
                     className="flex-1 py-2.5 bg-brand hover:bg-brand-dark text-white font-bold rounded-xl transition-all cursor-pointer text-xs shadow-md flex items-center justify-center gap-1.5"
@@ -632,13 +660,14 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
 
             {/* Step 5 */}
             {step === 5 && (
-              <div className="space-y-3 text-left">
+              <div className="space-y-3 text-left animate-in fade-in duration-200">
                 <div className="flex justify-between items-center mb-1">
                   <h4 className="text-ink font-bold text-xs font-serif">
                     Meniu Recomandat{" "}
                     {totalCost !== null && `(${totalCost.toFixed(2)} MDL)`}:
                   </h4>
                   <button
+                    type="button"
                     onClick={handleReset}
                     className="text-[11px] text-muted hover:text-brand flex items-center gap-1 transition-colors cursor-pointer"
                   >
@@ -686,6 +715,7 @@ export const AIChat: React.FC<Props> = ({ onAddToCart }) => {
                             </div>
 
                             <button
+                              type="button"
                               onClick={() => handleAddDirectly(item)}
                               disabled={isAdded}
                               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 ${
